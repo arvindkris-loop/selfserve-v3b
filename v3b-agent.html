@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loop — Onboarding Agent v3b</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fa; --white: #fff; --text: #1a1a2e; --text-sec: #5a5d7a; --text-light: #9496ad;
+    --border: #e8eaef; --accent: #6c5ce7; --accent-soft: #f0eeff; --accent-text: #5b4cdb;
+    --green: #10b981; --green-soft: #ecfdf5; --green-text: #059669;
+    --orange: #f59e0b; --orange-soft: #fffbeb; --orange-text: #d97706;
+    --blue: #3b82f6; --blue-soft: #eff6ff;
+    --teal: #00bfa6; --teal-soft: #e6faf7; --teal-text: #00917c;
+    --red: #ef4444; --red-soft: #fef2f2;
+    --r: 16px; --rs: 10px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04); --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; height:100vh; display:flex; flex-direction:column; }
+
+  /* TOPBAR */
+  .topbar { background:var(--white); border-bottom:1px solid var(--border); padding:0 24px; height:56px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:14px; }
+  .logo { font-size:17px; font-weight:800; color:var(--accent); letter-spacing:-0.5px; }
+  .topbar-divider { width:1px; height:20px; background:var(--border); }
+  .topbar-label { font-size:13px; color:var(--text-sec); }
+  .agent-badge { font-size:10px; padding:3px 10px; border-radius:12px; background:var(--accent-soft); color:var(--accent-text); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .mode-switch { font-size:12px; color:var(--text-sec); cursor:pointer; padding:5px 12px; border:1px solid var(--border); border-radius:var(--rs); background:var(--white); }
+  .mode-switch:hover { border-color:var(--accent); color:var(--accent-text); }
+  .help-link { font-size:13px; color:var(--text-sec); text-decoration:none; }
+
+  /* LAYOUT */
+  .main-layout { display:flex; flex:1; overflow:hidden; }
+
+  /* SIDEBAR */
+  .sidebar { width:260px; background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+  .sidebar-header { padding:16px 20px; border-bottom:1px solid var(--border); }
+  .sidebar-header h3 { font-size:13px; font-weight:700; color:var(--text-sec); text-transform:uppercase; letter-spacing:0.5px; }
+  .progress-ring { width:80px; height:80px; margin:16px auto 12px; position:relative; }
+  .progress-ring svg { transform:rotate(-90deg); }
+  .progress-ring .ring-bg { fill:none; stroke:var(--border); stroke-width:6; }
+  .progress-ring .ring-fill { fill:none; stroke:var(--accent); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset 0.6s ease; }
+  .progress-pct { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:18px; font-weight:800; color:var(--accent); }
+  .sidebar-modules { flex:1; overflow-y:auto; padding:8px 0; }
+  .sm-item { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; transition:background 0.1s; font-size:13px; }
+  .sm-item:hover { background:var(--bg); }
+  .sm-item.active { background:var(--accent-soft); color:var(--accent-text); font-weight:600; }
+  .sm-item.done { color:var(--green-text); }
+  .sm-dot { width:8px; height:8px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; }
+  .sm-item.done .sm-dot { background:var(--green); border-color:var(--green); }
+  .sm-item.active .sm-dot { background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .sm-item.pending .sm-dot { border-color:var(--border); }
+  .sm-sub { font-size:11px; color:var(--text-light); margin-left:28px; padding:4px 20px 4px 0; }
+  .sm-sub.active { color:var(--accent-text); font-weight:600; }
+
+  /* CHAT AREA */
+  .chat-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .chat-messages { flex:1; overflow-y:auto; padding:24px 32px; }
+  .chat-input-area { border-top:1px solid var(--border); background:var(--white); padding:16px 32px; flex-shrink:0; }
+
+  /* MESSAGES */
+  .msg { display:flex; gap:12px; margin-bottom:20px; max-width:680px; animation:fadeIn 0.3s ease; }
+  .msg-avatar { width:32px; height:32px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  .msg-avatar.agent { background:var(--accent); color:white; }
+  .msg-avatar.user { background:var(--teal); color:white; }
+  .msg-body { flex:1; }
+  .msg-name { font-size:11px; font-weight:600; color:var(--text-light); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px; }
+  .msg-bubble { font-size:14px; line-height:1.65; color:var(--text); }
+  .msg-bubble p { margin-bottom:8px; }
+  .msg-bubble p:last-child { margin-bottom:0; }
+  .msg-bubble strong { font-weight:600; }
+  .msg-time { font-size:10px; color:var(--text-light); margin-top:4px; }
+
+  /* EMBEDDED CARDS IN CHAT */
+  .chat-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); margin:12px 0; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .chat-card-header { padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between; }
+  .chat-card-body { padding:14px 16px; }
+  .chat-card table { width:100%; border-collapse:collapse; font-size:12px; }
+  .chat-card th { text-align:left; padding:6px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-light); font-weight:600; border-bottom:1px solid var(--border); background:var(--bg); }
+  .chat-card td { padding:6px 10px; border-bottom:1px solid var(--border); }
+  .chat-card tr:last-child td { border:none; }
+
+  /* ACTION BUTTONS IN CHAT */
+  .action-row { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .action-btn { padding:8px 18px; border-radius:var(--rs); font-size:12px; font-weight:600; cursor:pointer; border:none; transition:all 0.15s; font-family:inherit; }
+  .action-btn.primary { background:var(--accent); color:white; }
+  .action-btn.primary:hover { background:#5b4cdb; }
+  .action-btn.ghost { background:var(--white); color:var(--text-sec); border:1.5px solid var(--border); }
+  .action-btn.ghost:hover { border-color:var(--accent); color:var(--accent-text); }
+  .action-btn.teal { background:var(--teal); color:white; }
+  .action-btn.teal:hover { background:#00917c; }
+
+  /* QUICK REPLIES */
+  .quick-replies { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .qr-btn { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:var(--white); color:var(--text-sec); transition:all 0.1s; font-family:inherit; }
+  .qr-btn:hover { border-color:var(--accent); color:var(--accent-text); background:var(--accent-soft); }
+
+  /* INLINE FORM IN CHAT */
+  .inline-form { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin:12px 0; }
+  .inline-form .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .inline-form .full { grid-column:1/-1; }
+  .inline-form label { font-size:11px; font-weight:600; color:var(--text-sec); margin-bottom:3px; display:block; }
+  .inline-form input, .inline-form select { width:100%; padding:8px 12px; border:1.5px solid var(--border); border-radius:var(--rs); font-size:13px; font-family:inherit; background:var(--white); color:var(--text); }
+  .inline-form input:focus, .inline-form select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .inline-form select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239496ad'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; cursor:pointer; }
+
+  /* TAGS */
+  .tag { display:inline-flex; align-items:center; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:600; }
+  .tag-green { background:var(--green-soft); color:var(--green-text); }
+  .tag-orange { background:var(--orange-soft); color:var(--orange-text); }
+  .tag-teal { background:var(--teal-soft); color:var(--teal-text); }
+  .tag-blue { background:var(--blue-soft); color:#1e40af; }
+
+  /* LOC CHIPS */
+  .loc-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .loc-chip { padding:4px 10px; background:var(--white); border:1px solid var(--border); border-radius:16px; font-size:11px; }
+
+  /* CONNECT MINI */
+  .connect-mini { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--rs); margin:4px 0; transition:all 0.1s; }
+  .connect-mini:hover { border-color:var(--accent); }
+  .connect-mini.connected { border-color:var(--green); background:rgba(16,185,129,0.02); }
+  .cm-left { display:flex; align-items:center; gap:10px; }
+  .cm-icon { width:28px; height:28px; border-radius:7px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--text-light); }
+  .cm-name { font-size:12px; font-weight:600; }
+  .cm-btn { padding:4px 12px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:none; background:var(--accent); color:white; font-family:inherit; }
+
+  /* TYPING INDICATOR */
+  .typing { display:flex; gap:4px; align-items:center; padding:8px 0; }
+  .typing-dot { width:6px; height:6px; border-radius:50%; background:var(--text-light); animation:typingBounce 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay:0.2s; }
+  .typing-dot:nth-child(3) { animation-delay:0.4s; }
+
+  /* INPUT */
+  .chat-input-wrap { display:flex; gap:10px; align-items:flex-end; }
+  .chat-input { flex:1; padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:14px; font-family:inherit; resize:none; min-height:44px; max-height:120px; color:var(--text); background:var(--white); }
+  .chat-input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .chat-input::placeholder { color:var(--text-light); }
+  .send-btn { width:44px; height:44px; border-radius:var(--r); background:var(--accent); color:white; border:none; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:background 0.15s; flex-shrink:0; }
+  .send-btn:hover { background:#5b4cdb; }
+  .send-btn:disabled { background:var(--border); cursor:default; }
+
+  /* NOTIFICATION DOT */
+  .notif-count { font-size:9px; background:var(--accent); color:white; border-radius:8px; padding:1px 6px; margin-left:4px; font-weight:700; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+
+  @media (max-width:780px) {
+    .sidebar { display:none; }
+    .chat-messages { padding:16px; }
+    .chat-input-area { padding:12px 16px; }
+    .inline-form .form-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Loop</div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-label">Onboarding Agent</div>
+    <div class="agent-badge">AI-Guided</div>
+  </div>
+  <div class="topbar-right">
+    <button class="mode-switch" onclick="window.open('v3b-form.html','_blank')">Switch to Form View</button>
+    <a class="help-link" href="#">Need help?</a>
+  </div>
+</div>
+
+<div class="main-layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>Onboarding Progress</h3>
+      <div class="progress-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="ring-bg" cx="40" cy="40" r="34"/>
+          <circle class="ring-fill" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="160.2" id="progress-ring"/>
+        </svg>
+        <div class="progress-pct" id="progress-pct">25%</div>
+      </div>
+    </div>
+    <div class="sidebar-modules" id="sidebar-modules">
+      <div class="sm-item done" data-mod="access"><div class="sm-dot"></div>Access</div>
+      <div class="sm-item active" data-mod="connect"><div class="sm-dot"></div>Connect</div>
+      <div class="sm-sub active">ERP & Accounting</div>
+      <div class="sm-sub">POS</div>
+      <div class="sm-sub">Communication</div>
+      <div class="sm-item pending" data-mod="business"><div class="sm-dot"></div>Business</div>
+      <div class="sm-sub">Verify Brands</div>
+      <div class="sm-sub">Calendar</div>
+      <div class="sm-sub">People & Roles</div>
+      <div class="sm-sub">Notifications</div>
+      <div class="sm-sub">Brand Identity</div>
+      <div class="sm-item pending" data-mod="billing"><div class="sm-dot"></div>Billing</div>
+      <div class="sm-sub">Verify Contract</div>
+      <div class="sm-sub">Billing Entities</div>
+      <div class="sm-sub">Payment</div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area">
+    <div class="chat-messages" id="chat-messages">
+
+      <!-- AGENT: Welcome -->
+      <div class="msg">
+        <div class="msg-avatar agent">L</div>
+        <div class="msg-body">
+          <div class="msg-name">Loop Onboarding Agent</div>
+          <div class="msg-bubble">
+            <p>Hey there! I'm your Loop onboarding agent. I'll walk you through getting fully set up — Access, Connections, Business config, and Billing.</p>
+            <p>Great news: <strong>your Access is already complete!</strong> All platforms are connected.</p>
+          </div>
+          <div class="chat-card">
+            <div class="chat-card-header">Access Status <span class="tag tag-green">Complete</span></div>
+            <div class="chat-card-body" style="padding:0;">
+              <table>
+                <thead><tr><th>Platform</th><th>Stores</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>DoorDash</strong></td><td>20 / 20</td><td><span class="tag tag-green">100%</span></td></tr>
+                  <tr><td><strong>UberEats</strong></td><td>20 / 20</td><td><span class="tag tag-green">100%</span></td></tr>
+                  <tr><td><strong>Grubhub</strong></td><td>16 / 20</td><td><span class="tag tag-orange">80%</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="msg-bubble">
+            <p>Let's move on to <strong>connecting your tools</strong>. This is the most impactful step — operators who connect ERP + POS in week 1 see <strong>3x faster time-to-value</strong>.</p>
+            <p>Which of these do you use?</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENT: Connect ERP -->
+      <div class="msg">
+        <div class="msg-avatar agent">L</div>
+        <div class="msg-body">
+          <div class="msg-name">Loop Onboarding Agent</div>
+          <div class="msg-bubble"><p><strong>ERP & Accounting</strong> — connect one to unlock Balance (reconciliation, P&L, journal entries):</p></div>
+          <div style="max-width:400px;">
+            <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">R</div><div class="cm-name">Restaurant365</div></div><button class="cm-btn">Connect</button></div>
+            <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">Q</div><div class="cm-name">QuickBooks</div></div><button class="cm-btn">Connect</button></div>
+            <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">X</div><div class="cm-name">Xero</div></div><button class="cm-btn">Connect</button></div>
+            <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">S</div><div class="cm-name">Sage Intacct</div></div><button class="cm-btn">Connect</button></div>
+          </div>
+          <div class="quick-replies">
+            <button class="qr-btn" onclick="agentRespond('erp-skip')">We don't use any of these</button>
+            <button class="qr-btn" onclick="agentRespond('erp-later')">I'll connect later</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider for demo flow -->
+      <div id="flow-insert-point"></div>
+
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chat-input" placeholder="Type a message or click a button above..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+        <button class="send-btn" onclick="sendMessage()" id="send-btn">&#8593;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const insertPoint = document.getElementById('flow-insert-point');
+
+// FLOW STATE
+let currentStep = 'connect-erp';
+const demoFlow = {
+  'connect-pos': {
+    agent: true,
+    html: `<div class="msg-bubble"><p><strong>Point of Sale</strong> — POS data powers COGS analysis and order accuracy checks:</p></div>
+    <div style="max-width:400px;">
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">T</div><div class="cm-name">Toast</div></div><button class="cm-btn">Connect</button></div>
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">Sq</div><div class="cm-name">Square</div></div><button class="cm-btn">Connect</button></div>
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">A</div><div class="cm-name">Aloha (NCR)</div></div><button class="cm-btn">Connect</button></div>
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">O</div><div class="cm-name">Olo</div></div><button class="cm-btn">Connect</button></div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('pos-done')">Done with POS</button>
+      <button class="qr-btn" onclick="agentRespond('pos-skip')">Skip POS</button>
+    </div>`
+  },
+  'connect-comms': {
+    agent: true,
+    html: `<div class="msg-bubble"><p><strong>Communication</strong> — where should we send alerts and reports?</p></div>
+    <div style="max-width:400px;">
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">#</div><div class="cm-name">Slack</div></div><button class="cm-btn">Connect</button></div>
+      <div class="connect-mini" onclick="connectMini(this)"><div class="cm-left"><div class="cm-icon">T</div><div class="cm-name">Microsoft Teams</div></div><button class="cm-btn">Connect</button></div>
+      <div class="connect-mini connected"><div class="cm-left"><div class="cm-icon">@</div><div class="cm-name">Email</div></div><span class="tag tag-green">Always on</span></div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('comms-done')">Continue</button>
+    </div>`
+  },
+  'verify-brands': {
+    agent: true,
+    html: `<div class="msg-bubble">
+      <p>Great, connections are set up! Now let's <strong>verify your brands and locations</strong>.</p>
+      <p>From your contract, I see:</p>
+    </div>
+    <div class="chat-card">
+      <div class="chat-card-header">Your Brands <span style="font-size:11px;color:var(--text-light);">20 total contracted locations</span></div>
+      <div class="chat-card-body">
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><strong style="font-size:13px;">Dave's Hot Chicken</strong><span class="tag tag-green">12 locations</span></div>
+          <div class="loc-chips">
+            <div class="loc-chip">DHC Tampa Downtown</div><div class="loc-chip">DHC Tampa Westshore</div><div class="loc-chip">DHC Orlando I-Drive</div><div class="loc-chip">DHC Orlando Mills</div><div class="loc-chip">DHC Jacksonville Beach</div><div class="loc-chip">DHC Jacksonville South</div><div class="loc-chip">DHC Miami Brickell</div><div class="loc-chip">DHC Miami Doral</div><div class="loc-chip">DHC Fort Lauderdale</div><div class="loc-chip">DHC St. Petersburg</div><div class="loc-chip">DHC Clearwater</div><div class="loc-chip">DHC Sarasota</div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><strong style="font-size:13px;">Slim Chickens</strong><span class="tag tag-green">8 locations</span></div>
+          <div class="loc-chips">
+            <div class="loc-chip">SC Tampa Carrollwood</div><div class="loc-chip">SC Orlando Colonial</div><div class="loc-chip">SC Jacksonville Riverside</div><div class="loc-chip">SC Tallahassee</div><div class="loc-chip">SC Gainesville</div><div class="loc-chip">SC Pensacola</div><div class="loc-chip">SC Naples</div><div class="loc-chip">SC Lakeland</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="msg-bubble"><p>Does this look right? Any locations to add or remove?</p></div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('brands-ok')">Looks correct</button>
+      <button class="qr-btn" onclick="agentRespond('brands-change')">I need to make changes</button>
+      <button class="qr-btn" onclick="agentRespond('brands-add')">Add a brand</button>
+    </div>`
+  },
+  'calendar': {
+    agent: true,
+    html: `<div class="msg-bubble"><p>Next up: <strong>Calendar & Period Design</strong>. This powers all your reporting — P&L, campaigns, operational cadences.</p></div>
+    <div class="inline-form">
+      <div class="form-grid">
+        <div><label>Fiscal Year Starts</label><select><option selected>January</option><option>February</option><option>April</option><option>July</option><option>October</option></select></div>
+        <div><label>Fiscal Year Ends</label><select><option selected>December</option><option>March</option><option>June</option></select></div>
+        <div><label>Period Type</label><select><option selected>Calendar Month (12 periods)</option><option>4-4-5 (13 periods)</option><option>4-5-4 (13 periods)</option><option>5-4-4 (13 periods)</option><option>Custom</option></select></div>
+        <div><label>Comp Store After</label><select><option selected>12 months</option><option>18 months</option><option>Custom</option></select></div>
+      </div>
+    </div>
+    <div class="msg-bubble"><p>Same calendar for both brands?</p></div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('calendar-same')">Yes, same for both</button>
+      <button class="qr-btn" onclick="agentRespond('calendar-diff')">Different per brand</button>
+    </div>`
+  },
+  'people': {
+    agent: true,
+    html: `<div class="msg-bubble"><p>Now let's set up <strong>People & Roles</strong>. Who are the key people on your team?</p></div>
+    <div class="chat-card">
+      <div class="chat-card-header">Key People <span style="font-size:11px;color:var(--text-light);">Pre-filled from contract</span></div>
+      <div class="chat-card-body" style="padding:0;">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Brands</th><th>Access</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Marcus Johnson</strong><div style="font-size:10px;color:var(--text-light);">marcus@example.com</div></td><td>Marketing</td><td>All</td><td><span class="tag tag-teal">Full</span></td></tr>
+            <tr><td><strong>Sarah Chen</strong><div style="font-size:10px;color:var(--text-light);">sarah@example.com</div></td><td>Owner</td><td>All</td><td><span class="tag tag-teal">Full</span></td></tr>
+            <tr><td><strong>Jake Miller</strong><div style="font-size:10px;color:var(--text-light);">jake@example.com</div></td><td>Operations</td><td>Dave's</td><td><span class="tag tag-blue">Reports</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('people-ok')">Looks good</button>
+      <button class="qr-btn" onclick="agentRespond('people-add')">Add someone</button>
+      <button class="qr-btn" onclick="agentRespond('people-edit')">Edit a person</button>
+    </div>`
+  },
+  'notifications': {
+    agent: true,
+    html: `<div class="msg-bubble">
+      <p><strong>Reports & Notifications</strong> — getting the right reports to the right people is the #1 driver of engagement. Here's what I'd recommend based on roles:</p>
+    </div>
+    <div class="chat-card">
+      <div class="chat-card-header">Recommended Report Setup</div>
+      <div class="chat-card-body" style="padding:0;">
+        <table>
+          <thead><tr><th>Report</th><th>Freq</th><th>Marcus</th><th>Sarah</th><th>Jake</th></tr></thead>
+          <tbody>
+            <tr style="background:var(--bg);"><td colspan="5" style="font-size:10px;font-weight:700;color:var(--accent-text);padding:5px 10px;">OPERATIONS (PROTECT)</td></tr>
+            <tr><td style="font-size:11px;"><strong>Guard Summary</strong></td><td style="font-size:11px;">Daily</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Recover Digest</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Error Rate Alert</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;"></td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Store Scorecard</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Daily Sales Digest</strong></td><td style="font-size:11px;">Daily</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Menu Performance</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td></tr>
+            <tr style="background:var(--bg);"><td colspan="5" style="font-size:10px;font-weight:700;color:var(--accent-text);padding:5px 10px;">MARKETING (TRUROI)</td></tr>
+            <tr><td style="font-size:11px;"><strong>Marketing Perf</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Campaign Approval</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Re-Engage Alerts</strong></td><td style="font-size:11px;">Daily</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Competitive Insights</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td><td style="text-align:center;"></td></tr>
+            <tr style="background:var(--bg);"><td colspan="5" style="font-size:10px;font-weight:700;color:var(--accent-text);padding:5px 10px;">FINANCE (BALANCE)</td></tr>
+            <tr><td style="font-size:11px;"><strong>P&L Report</strong></td><td style="font-size:11px;">Per Period</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Recon Summary</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Payout Alert</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Invoice Notice</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr style="background:var(--bg);"><td colspan="5" style="font-size:10px;font-weight:700;color:var(--accent-text);padding:5px 10px;">AI & BI</td></tr>
+            <tr><td style="font-size:11px;"><strong>Overwatch</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Scheduled Reports</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;"></td></tr>
+            <tr><td style="font-size:11px;"><strong>Weekly Biz Review</strong></td><td style="font-size:11px;">Weekly</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+            <tr><td style="font-size:11px;"><strong>Anomaly Detection</strong></td><td style="font-size:11px;">Real-time</td><td style="text-align:center;"></td><td style="text-align:center;">&#10003;</td><td style="text-align:center;">&#10003;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="msg-bubble"><p>I've pre-configured based on each person's role. Want to adjust anything?</p></div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('notif-ok')">Looks perfect</button>
+      <button class="qr-btn" onclick="agentRespond('notif-edit')">Let me adjust</button>
+    </div>`
+  },
+  'brand-identity': {
+    agent: true,
+    html: `<div class="msg-bubble"><p>Almost done with Business setup! Let's configure your <strong>brand identity</strong> and <strong>report template</strong>.</p></div>
+    <div class="chat-card">
+      <div class="chat-card-header">Dave's Hot Chicken — Brand Identity</div>
+      <div class="chat-card-body">
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;">
+          <div style="width:56px;height:56px;border-radius:12px;background:#FFF5F5;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:20px;font-weight:800;color:#e63946;">D</span>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;">Logo auto-detected</div>
+            <div style="font-size:11px;color:var(--text-light);">Click to upload higher-res</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:24px;border-radius:6px;background:#e63946;border:1px solid var(--border);"></div><span style="font-size:11px;color:var(--text-light);">Primary</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:24px;border-radius:6px;background:#1d3557;border:1px solid var(--border);"></div><span style="font-size:11px;color:var(--text-light);">Secondary</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:24px;border-radius:6px;background:#f1faee;border:1px solid var(--border);"></div><span style="font-size:11px;color:var(--text-light);">Accent</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="inline-form">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-sec);">REPORT TEMPLATE</div>
+      <div class="form-grid">
+        <div><label>Report Title Prefix</label><input value="Dave's Hot Chicken"></div>
+        <div><label>Export Format</label><select><option selected>PDF</option><option>Excel</option><option>Both</option><option>Google Sheets</option></select></div>
+        <div><label>AI Persona Name</label><input placeholder="e.g. Dave Z, ChickenBot"></div>
+        <div><label>Footer Text</label><input placeholder="e.g. Confidential"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:6px;"><input type="checkbox" checked> Logo in report header</label>
+        <label style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:6px;"><input type="checkbox" checked> Brand colors on charts</label>
+        <label style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:6px;"><input type="checkbox" checked> Period dates in footer</label>
+      </div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('brand-ok')">Save & continue</button>
+      <button class="qr-btn" onclick="agentRespond('brand-slim')">Set up Slim Chickens too</button>
+    </div>`
+  },
+  'billing-verify': {
+    agent: true,
+    html: `<div class="msg-bubble">
+      <p>Business setup is <strong>complete</strong>! Now let's finalize <strong>Billing</strong>.</p>
+      <p>First, please verify your contract details:</p>
+    </div>
+    <div class="chat-card">
+      <div class="chat-card-header">Contract Summary <span class="tag tag-orange">Pending Verification</span></div>
+      <div class="chat-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div><span style="color:var(--text-light);">Customer</span><br><strong>Hammorg Foods LLC</strong></div>
+          <div><span style="color:var(--text-light);">Signed</span><br><strong>Dec 15, 2025</strong></div>
+          <div><span style="color:var(--text-light);">Locations</span><br><strong>20</strong></div>
+          <div><span style="color:var(--text-light);">Term</span><br><strong>12 months (auto-renew)</strong></div>
+          <div><span style="color:var(--text-light);">Est. Monthly</span><br><strong style="color:var(--accent);">$3,690</strong></div>
+          <div><span style="color:var(--text-light);">Payment Terms</span><br><strong>Net 30</strong></div>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">ACTIVE PRODUCTS</div>
+          <div style="font-size:12px;line-height:1.8;">
+            TruROI+ (20 locs) — <strong>$2,000</strong> | Recover (20) — <strong>$300</strong> | Guard (20) — <strong>$980</strong> | Balance (20) — <strong>$410</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="quick-replies">
+      <button class="qr-btn" onclick="agentRespond('contract-ok')">I verify this is correct</button>
+      <button class="qr-btn" onclick="agentRespond('contract-issue')">Something's not right</button>
+    </div>`
+  },
+  'billing-entities': {
+    agent: true,
+    html: `<div class="msg-bubble">
+      <p>Contract verified! Now, <strong>how would you like your locations grouped for invoicing?</strong></p>
+    </div>
+    <div class="action-row">
+      <button class="action-btn primary" onclick="agentRespond('be-single')"><strong>Single Entity</strong><br><span style="font-weight:400;font-size:11px;">One invoice for all 20 locs</span></button>
+      <button class="action-btn ghost" onclick="agentRespond('be-grouped')"><strong>Grouped</strong><br><span style="font-weight:400;font-size:11px;">By brand (2 invoices)</span></button>
+      <button class="action-btn ghost" onclick="agentRespond('be-perloc')"><strong>Per-Location</strong><br><span style="font-weight:400;font-size:11px;">20 separate invoices</span></button>
+    </div>`
+  },
+  'billing-entity-details': {
+    agent: true,
+    html: `<div class="msg-bubble"><p>Got it. I'll need the billing contact details for your entity. These are required fields:</p></div>
+    <div class="inline-form">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-sec);">BILLING ENTITY: HAMMORG FOODS LLC (20 locations)</div>
+      <div class="form-grid">
+        <div><label>Account Manager Name *</label><input placeholder="Full name"></div>
+        <div><label>Account Manager Email *</label><input placeholder="billing@company.com"></div>
+        <div><label>Phone *</label><input placeholder="(555) 123-4567"></div>
+        <div><label>Payment Method *</label><select><option value="">Select...</option><option>Credit Card</option><option>ACH / Bank Transfer</option><option>Wire Transfer</option><option>Check</option></select></div>
+        <div class="full"><label>Billing Address</label><input placeholder="Street, City, State ZIP"></div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="action-btn primary" onclick="agentRespond('be-saved')">Save Billing Entity</button>
+    </div>`
+  },
+  'billing-payment': {
+    agent: true,
+    html: `<div class="msg-bubble">
+      <p>Billing entity saved! Last step — <strong>set up your payment method</strong>.</p>
+    </div>
+    <div class="action-row">
+      <button class="action-btn teal" onclick="agentRespond('payment-redirect')">Set Up Payment Method &rarr;</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Secure redirect to Stripe/Zenskar portal &middot; ACH, Credit Card, or Wire</div>`
+  },
+  'complete': {
+    agent: true,
+    html: `<div class="msg-bubble" style="text-align:center;padding:20px 0;">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--green-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;">&#10003;</div>
+      <p style="font-size:18px;font-weight:700;margin-bottom:6px;">You're all set!</p>
+      <p>Your onboarding is complete. Here's what happens next:</p>
+      <div style="text-align:left;max-width:380px;margin:16px auto 0;background:var(--accent-soft);border-radius:var(--rs);padding:14px 18px;font-size:13px;line-height:1.8;">
+        1. Ops team runs QC (&lt; 24 hrs)<br>
+        2. Dashboards go live with real data<br>
+        3. CSM schedules kickoff call<br>
+        4. Payment method confirmed via portal
+      </div>
+    </div>`
+  }
+};
+
+// Flow sequence
+const flowSequence = [
+  'connect-pos', 'connect-comms', 'verify-brands', 'calendar',
+  'people', 'notifications', 'brand-identity',
+  'billing-verify', 'billing-entities', 'billing-entity-details', 'billing-payment', 'complete'
+];
+let flowIndex = 0;
+
+function agentRespond(action) {
+  // Disable clicked quick replies
+  const btns = event.target.closest('.quick-replies') || event.target.closest('.action-row');
+  if (btns) btns.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'default'; });
+
+  // Add user message
+  let userText = event.target.textContent.trim();
+  addMessage('user', userText);
+
+  // Show typing then agent response
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const nextStep = flowSequence[flowIndex];
+    if (nextStep && demoFlow[nextStep]) {
+      addAgentMessage(demoFlow[nextStep].html);
+      flowIndex++;
+      updateSidebarProgress();
+    }
+  }, 800 + Math.random() * 600);
+}
+
+function addMessage(type, text) {
+  const msg = document.createElement('div');
+  msg.className = 'msg';
+  msg.style.justifyContent = type === 'user' ? 'flex-end' : 'flex-start';
+  msg.innerHTML = type === 'user'
+    ? `<div class="msg-body" style="text-align:right;"><div class="msg-name">You</div><div class="msg-bubble" style="background:var(--accent-soft);display:inline-block;padding:8px 14px;border-radius:var(--r) var(--r) 4px var(--r);">${text}</div></div><div class="msg-avatar user">Y</div>`
+    : `<div class="msg-avatar agent">L</div><div class="msg-body"><div class="msg-name">Loop Onboarding Agent</div><div class="msg-bubble">${text}</div></div>`;
+  insertPoint.parentNode.insertBefore(msg, insertPoint);
+  scrollToBottom();
+}
+
+function addAgentMessage(html) {
+  const msg = document.createElement('div');
+  msg.className = 'msg';
+  msg.innerHTML = `<div class="msg-avatar agent">L</div><div class="msg-body"><div class="msg-name">Loop Onboarding Agent</div>${html}</div>`;
+  insertPoint.parentNode.insertBefore(msg, insertPoint);
+  scrollToBottom();
+}
+
+let typingEl = null;
+function showTyping() {
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg';
+  typingEl.id = 'typing-indicator';
+  typingEl.innerHTML = `<div class="msg-avatar agent">L</div><div class="msg-body"><div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  insertPoint.parentNode.insertBefore(typingEl, insertPoint);
+  scrollToBottom();
+}
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function scrollToBottom() {
+  const el = document.getElementById('chat-messages');
+  setTimeout(() => el.scrollTop = el.scrollHeight, 50);
+}
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage('user', text);
+  input.value = '';
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const nextStep = flowSequence[flowIndex];
+    if (nextStep && demoFlow[nextStep]) {
+      addAgentMessage(demoFlow[nextStep].html);
+      flowIndex++;
+      updateSidebarProgress();
+    } else {
+      addAgentMessage('<div class="msg-bubble"><p>Thanks! Your onboarding is complete. If you need anything else, just ask.</p></div>');
+    }
+  }, 1000 + Math.random() * 500);
+}
+
+function connectMini(el) {
+  el.classList.add('connected');
+  const btn = el.querySelector('.cm-btn');
+  if (btn) { btn.textContent = 'Connected'; btn.style.background = 'var(--green)'; btn.disabled = true; }
+}
+
+function updateSidebarProgress() {
+  const pct = Math.min(100, Math.round(((flowIndex + 1) / flowSequence.length) * 100));
+  document.getElementById('progress-pct').textContent = pct + '%';
+  const circumference = 2 * Math.PI * 34;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById('progress-ring').style.strokeDashoffset = offset;
+
+  // Update sidebar items
+  const items = document.querySelectorAll('.sm-item');
+  if (flowIndex >= 2) { items[1].className = 'sm-item done'; items[2].className = 'sm-item active'; } // Connect done, Business active
+  if (flowIndex >= 7) { items[2].className = 'sm-item done'; items[3].className = 'sm-item active'; } // Business done, Billing active
+  if (flowIndex >= 11) { items[3].className = 'sm-item done'; } // Billing done
+}
+
+// Auto-resize textarea
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+scrollToBottom();
+</script>
+</body>
+</html>

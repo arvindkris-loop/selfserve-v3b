@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loop — Onboarding Portal v3b</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fa; --white: #ffffff; --text: #1a1a2e; --text-sec: #5a5d7a; --text-light: #9496ad;
+    --border: #e8eaef; --border-focus: #7c6cf0;
+    --accent: #6c5ce7; --accent-soft: #f0eeff; --accent-text: #5b4cdb;
+    --green: #10b981; --green-soft: #ecfdf5; --green-text: #059669;
+    --orange: #f59e0b; --orange-soft: #fffbeb; --orange-text: #d97706;
+    --blue: #3b82f6; --blue-soft: #eff6ff;
+    --teal: #00bfa6; --teal-soft: #e6faf7; --teal-text: #00917c;
+    --red: #ef4444; --red-soft: #fef2f2;
+    --r: 16px; --rs: 10px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04); --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+  .topbar { background:var(--white); border-bottom:1px solid var(--border); padding:0 32px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .logo { font-size:17px; font-weight:800; color:var(--accent); letter-spacing:-0.5px; }
+  .topbar-divider { width:1px; height:20px; background:var(--border); }
+  .topbar-label { font-size:13px; color:var(--text-sec); }
+  .topbar-right { display:flex; align-items:center; gap:20px; }
+  .save-status { font-size:12px; color:var(--green-text); display:flex; align-items:center; gap:5px; }
+  .save-dot { width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .help-link { font-size:13px; color:var(--text-sec); text-decoration:none; cursor:pointer; }
+  .help-link:hover { color:var(--accent); }
+
+  .module-tabs { background:var(--white); border-bottom:1px solid var(--border); padding:0 32px; display:flex; gap:0; position:sticky; top:56px; z-index:99; }
+  .mod-tab { padding:14px 24px; font-size:13px; font-weight:600; color:var(--text-light); cursor:pointer; border-bottom:2.5px solid transparent; transition:all 0.15s; display:flex; align-items:center; gap:8px; }
+  .mod-tab:hover { color:var(--text); }
+  .mod-tab.active { color:var(--accent-text); border-bottom-color:var(--accent); }
+  .mt-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .mt-badge.done { background:var(--green-soft); color:var(--green-text); }
+  .mt-badge.active { background:var(--accent-soft); color:var(--accent-text); }
+  .mt-badge.pending { background:var(--orange-soft); color:var(--orange-text); }
+  .mt-badge.locked { background:var(--bg); color:var(--text-light); }
+
+  .overall-progress { background:var(--white); border-bottom:1px solid var(--border); padding:16px 32px; }
+  .op-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .op-text { font-size:13px; color:var(--text-sec); }
+  .op-text strong { color:var(--text); }
+  .op-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .op-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent),#a78bfa); transition:width 0.6s ease; }
+  .op-modules { display:flex; gap:24px; margin-top:10px; }
+  .op-mod { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-light); }
+  .op-mod-dot { width:8px; height:8px; border-radius:50%; border:2px solid var(--border); }
+  .op-mod-dot.done { background:var(--green); border-color:var(--green); }
+  .op-mod-dot.active { background:var(--accent); border-color:var(--accent); }
+  .op-mod-dot.pending { background:var(--orange); border-color:var(--orange); }
+  .op-mod.active { color:var(--accent-text); font-weight:600; }
+  .op-mod.done { color:var(--green-text); }
+
+  .container { max-width:760px; margin:0 auto; padding:32px 24px 80px; }
+  .module-panel { display:none; }
+  .module-panel.active { display:block; animation:fadeIn 0.3s ease; }
+
+  .step-header { margin-bottom:24px; }
+  .step-eyebrow { font-size:12px; color:var(--accent-text); font-weight:600; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .step-time { font-size:11px; font-weight:400; color:var(--text-light); background:var(--bg); padding:2px 10px; border-radius:20px; text-transform:none; letter-spacing:0; }
+  .step-header h1 { font-size:22px; font-weight:700; color:var(--text); margin-bottom:6px; letter-spacing:-0.3px; }
+  .step-header p { font-size:14px; color:var(--text-sec); max-width:600px; }
+
+  .why-banner { background:var(--accent-soft); border:1px solid rgba(108,92,231,0.12); border-radius:var(--rs); padding:12px 16px; margin-bottom:20px; font-size:13px; color:var(--accent-text); display:flex; gap:10px; align-items:flex-start; }
+  .why-banner .why-icon { font-size:16px; flex-shrink:0; }
+  .prefill-banner { background:var(--green-soft); border:1px solid rgba(16,185,129,0.15); border-radius:var(--rs); padding:12px 16px; margin-bottom:20px; font-size:13px; color:var(--green-text); display:flex; gap:10px; align-items:flex-start; }
+  .prefill-banner .pf-icon { font-size:16px; flex-shrink:0; }
+  .fomo-banner { background:var(--orange-soft); border:1px solid rgba(245,158,11,0.2); border-radius:var(--rs); padding:12px 16px; margin-bottom:20px; font-size:13px; color:var(--orange-text); display:flex; gap:10px; align-items:flex-start; }
+  .fomo-banner .fomo-icon { font-size:16px; flex-shrink:0; }
+
+  .card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); margin-bottom:16px; box-shadow:var(--shadow-sm); }
+  .card-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-header h3 { font-size:14px; font-weight:600; }
+  .card-body { padding:18px 20px; }
+  .card-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg); border-radius:0 0 var(--r) var(--r); }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .full { grid-column:1/-1; }
+  .fg { display:flex; flex-direction:column; gap:4px; }
+  .fl { font-size:12px; font-weight:600; color:var(--text-sec); display:flex; align-items:center; gap:6px; }
+  .fl .opt { font-size:11px; color:var(--text-light); font-weight:400; }
+  .fi { padding:9px 13px; background:var(--white); border:1.5px solid var(--border); border-radius:var(--rs); color:var(--text); font-size:13px; transition:border-color 0.15s,box-shadow 0.15s; font-family:inherit; }
+  .fi:focus { outline:none; border-color:var(--border-focus); box-shadow:0 0 0 3px var(--accent-soft); }
+  .fi.prefilled { border-color:rgba(16,185,129,0.35); background:rgba(16,185,129,0.03); }
+  .fi-hint { font-size:11px; color:var(--text-light); }
+  select.fi { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239496ad'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; cursor:pointer; }
+
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+  .toggle-label { font-size:13px; color:var(--text-sec); }
+  .toggle { width:40px; height:22px; background:var(--border); border-radius:11px; position:relative; cursor:pointer; transition:background 0.2s; }
+  .toggle.on { background:var(--accent); }
+  .toggle::after { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:white; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+  .toggle.on::after { transform:translateX(18px); }
+
+  .upload-zone { border:2px dashed var(--border); border-radius:var(--rs); padding:28px 20px; text-align:center; cursor:pointer; transition:border-color 0.15s,background 0.15s; background:var(--bg); }
+  .upload-zone:hover { border-color:var(--accent); background:var(--accent-soft); }
+  .uz-text { font-size:13px; color:var(--text-sec); }
+  .uz-text strong { color:var(--accent-text); }
+
+  .btn { padding:9px 22px; border-radius:var(--rs); font-size:13px; font-weight:600; cursor:pointer; border:none; transition:all 0.15s; font-family:inherit; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:#5b4cdb; box-shadow:0 2px 8px rgba(108,92,231,0.3); }
+  .btn-teal { background:var(--teal); color:white; }
+  .btn-teal:hover { background:#00917c; }
+  .btn-ghost { background:var(--white); color:var(--text-sec); border:1.5px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--text-light); color:var(--text); }
+  .btn-sm { padding:6px 14px; font-size:12px; }
+  .btn-link { background:none; border:none; color:var(--accent-text); font-size:12px; cursor:pointer; font-weight:500; font-family:inherit; }
+  .btn-link:hover { text-decoration:underline; }
+
+  .tag { display:inline-flex; align-items:center; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:500; background:var(--bg); border:1px solid var(--border); color:var(--text-sec); }
+  .tag-green { background:var(--green-soft); color:var(--green-text); border-color:rgba(16,185,129,0.2); }
+  .tag-orange { background:var(--orange-soft); color:var(--orange-text); border-color:rgba(245,158,11,0.2); }
+  .tag-teal { background:var(--teal-soft); color:var(--teal-text); border-color:rgba(0,191,166,0.2); }
+  .tag-blue { background:var(--blue-soft); color:#1e40af; border-color:rgba(59,130,246,0.2); }
+
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .data-table th { text-align:left; padding:9px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-light); font-weight:600; border-bottom:1px solid var(--border); background:var(--bg); }
+  .data-table td { padding:9px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .data-table tr:last-child td { border:none; }
+
+  /* Scroll indicator for wide tables */
+  .scroll-wrap { position:relative; }
+  .scroll-inner { overflow-x:auto; }
+  .scroll-fade { position:absolute; right:0; top:0; bottom:0; width:48px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.95)); pointer-events:none; z-index:2; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; }
+  .scroll-fade span { font-size:9px; color:var(--accent-text); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; writing-mode:vertical-rl; }
+
+  .brand-pills { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .brand-pill { padding:6px 16px; border:1.5px solid var(--border); border-radius:var(--rs); font-size:13px; cursor:pointer; background:var(--white); color:var(--text-sec); transition:all 0.15s; font-weight:500; }
+  .brand-pill.active { background:var(--accent); color:white; border-color:var(--accent); }
+  .brand-pill:hover:not(.active) { border-color:var(--accent); color:var(--accent-text); }
+
+  .connect-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .connect-card { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; background:var(--white); border:1.5px solid var(--border); border-radius:var(--r); transition:all 0.15s; cursor:pointer; }
+  .connect-card:hover { border-color:var(--accent); box-shadow:var(--shadow-md); }
+  .connect-card.connected { border-color:var(--green); background:rgba(16,185,129,0.02); }
+  .cc-left { display:flex; align-items:center; gap:12px; }
+  .cc-icon { width:40px; height:40px; border-radius:10px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--text-light); }
+  .cc-info h4 { font-size:13px; font-weight:600; }
+  .cc-info p { font-size:11px; color:var(--text-light); margin-top:1px; }
+  .connect-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+  .notif-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .notif-table th { text-align:left; padding:8px 12px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-light); font-weight:600; border-bottom:1px solid var(--border); background:var(--bg); }
+  .notif-table td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .notif-table tr:last-child td { border:none; }
+
+  .period-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:12px; }
+  .period-cell { padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; text-align:center; font-size:11px; }
+  .period-cell .pc-num { font-weight:700; font-size:13px; color:var(--accent-text); }
+  .period-cell .pc-dates { color:var(--text-light); margin-top:2px; }
+
+  .sub-progress { display:flex; justify-content:space-between; margin-bottom:24px; background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:14px 20px; }
+  .sp-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; flex:1; }
+  .sp-dot { width:10px; height:10px; border-radius:50%; border:2px solid var(--border); background:var(--white); transition:all 0.2s; }
+  .sp-item.done .sp-dot { background:var(--green); border-color:var(--green); }
+  .sp-item.active .sp-dot { background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .sp-label { font-size:10px; color:var(--text-light); white-space:nowrap; }
+  .sp-item.active .sp-label { color:var(--accent-text); font-weight:600; }
+  .sp-item.done .sp-label { color:var(--green-text); }
+  .step-panel { display:none; }
+  .step-panel.active { display:block; animation:fadeIn 0.3s ease; }
+
+  /* Location chips */
+  .loc-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .loc-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; background:var(--white); border:1px solid var(--border); border-radius:20px; font-size:12px; }
+  .loc-chip .lc-x { cursor:pointer; color:var(--text-light); font-weight:700; font-size:13px; }
+  .loc-chip .lc-x:hover { color:var(--red); }
+  .loc-expand { background:var(--bg); border-top:1px solid var(--border); padding:16px 20px; display:none; }
+  .loc-expand.open { display:block; }
+  .loc-pool-item { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; margin:3px; border:1px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; background:var(--white); transition:all 0.1s; }
+  .loc-pool-item:hover { border-color:var(--accent); background:var(--accent-soft); }
+  .loc-pool-item.assigned { border-color:var(--green); background:var(--green-soft); color:var(--green-text); }
+
+  .swatch-row { display:flex; gap:14px; margin-top:6px; }
+  .swatch { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .swatch-circle { width:40px; height:40px; border-radius:10px; border:2px solid var(--border); cursor:pointer; transition:transform 0.1s; }
+  .swatch-circle:hover { transform:scale(1.08); }
+  .swatch span { font-size:10px; color:var(--text-light); }
+
+  .complete-wrap { text-align:center; padding:48px 20px; }
+  .complete-icon { width:64px; height:64px; border-radius:50%; background:var(--green-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:28px; }
+  .complete-wrap h1 { font-size:22px; margin-bottom:8px; }
+  .complete-wrap p { color:var(--text-sec); font-size:14px; max-width:480px; margin:0 auto 28px; }
+
+  .billing-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .b-stat { background:var(--white); border:1px solid var(--border); border-radius:var(--rs); padding:14px 16px; }
+  .b-stat-label { font-size:11px; color:var(--text-light); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
+  .b-stat-value { font-size:20px; font-weight:700; color:var(--text); margin-top:4px; }
+  .b-stat-sub { font-size:11px; color:var(--text-light); margin-top:2px; }
+
+  /* Billing structure selector */
+  .bs-options { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px; }
+  .bs-option { padding:18px 16px; border:2px solid var(--border); border-radius:var(--r); cursor:pointer; text-align:center; transition:all 0.15s; }
+  .bs-option:hover { border-color:var(--accent); }
+  .bs-option.selected { border-color:var(--accent); background:var(--accent-soft); }
+  .bs-option h4 { font-size:13px; font-weight:700; margin-bottom:4px; }
+  .bs-option p { font-size:11px; color:var(--text-sec); line-height:1.4; }
+
+  /* Billing entity card */
+  .be-card { background:var(--white); border:1.5px solid var(--border); border-radius:var(--r); margin-bottom:14px; }
+  .be-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .be-header h4 { font-size:14px; font-weight:600; }
+  .be-body { padding:18px 20px; }
+
+  /* Report template preview */
+  .rt-preview { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-top:12px; }
+  .rt-bar { height:36px; display:flex; align-items:center; padding:0 14px; gap:10px; border-radius:var(--r) var(--r) 0 0; }
+  .rt-bar .rt-logo-ph { width:22px; height:22px; border-radius:5px; background:rgba(255,255,255,0.3); }
+  .rt-bar .rt-title { color:white; font-size:11px; font-weight:700; }
+  .rt-body-preview { background:white; padding:14px; min-height:60px; font-size:11px; color:var(--text-light); border:1px solid var(--border); border-top:none; }
+  .rt-footer-preview { padding:6px 14px; text-align:center; font-size:9px; color:var(--text-light); background:var(--bg); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--r) var(--r); }
+
+  /* Contract verify */
+  .cv-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .cv-row:last-child { border:none; }
+  .cv-label { font-size:12px; color:var(--text-light); font-weight:600; }
+  .cv-value { font-size:13px; font-weight:600; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @media (max-width:780px) {
+    .container { padding:24px 16px 60px; }
+    .form-grid,.connect-grid,.bs-options { grid-template-columns:1fr; }
+    .connect-grid-3 { grid-template-columns:1fr 1fr; }
+    .sub-progress { display:none; }
+    .billing-stats { grid-template-columns:1fr 1fr; }
+    .period-grid { grid-template-columns:1fr 1fr; }
+    .module-tabs { overflow-x:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Loop</div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-label">Onboarding Portal</div>
+  </div>
+  <div class="topbar-right">
+    <div class="save-status"><div class="save-dot"></div> Auto-saved</div>
+    <a class="help-link" href="#">Need help? Talk to us</a>
+  </div>
+</div>
+
+<!-- MODULE TABS -->
+<div class="module-tabs" id="module-tabs">
+  <div class="mod-tab active" onclick="showModule('access')">Access<span class="mt-badge done" id="badge-access">Complete</span></div>
+  <div class="mod-tab" onclick="showModule('connect')">Connect<span class="mt-badge active" id="badge-connect">In Progress</span></div>
+  <div class="mod-tab" onclick="showModule('business')">Business<span class="mt-badge pending" id="badge-business">Pending</span></div>
+  <div class="mod-tab" onclick="showModule('billing')">Billing<span class="mt-badge pending" id="badge-billing">Pending</span></div>
+</div>
+
+<!-- OVERALL PROGRESS -->
+<div class="overall-progress">
+  <div class="op-top">
+    <div class="op-text"><strong id="op-label">1 of 4 modules</strong> &mdash; Connect your tools next</div>
+    <div class="op-text" style="color:var(--text-light);font-size:12px;" id="op-time">~18 min remaining</div>
+  </div>
+  <div class="op-bar"><div class="op-fill" id="op-fill" style="width:25%"></div></div>
+  <div class="op-modules">
+    <div class="op-mod done"><div class="op-mod-dot done"></div>Access</div>
+    <div class="op-mod active"><div class="op-mod-dot active"></div>Connect</div>
+    <div class="op-mod"><div class="op-mod-dot pending"></div>Business</div>
+    <div class="op-mod"><div class="op-mod-dot pending"></div>Billing</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ================================================================ -->
+<!-- ACCESS MODULE (Complete) -->
+<!-- ================================================================ -->
+<div id="mod-access" class="module-panel active">
+  <div class="step-header">
+    <div class="step-eyebrow">Access Onboarding <span class="step-time">Completed</span></div>
+    <h1>Platform Access</h1>
+    <p>Your marketplace accounts are connected and store access is verified.</p>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Access Status</h3><span class="tag tag-green">Complete</span></div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Platform</th><th>Stores Connected</th><th>Status</th><th>Connected On</th></tr></thead>
+        <tbody>
+          <tr><td><strong>DoorDash</strong></td><td>20 of 20</td><td><span class="tag tag-green">100%</span></td><td>Apr 8, 2026</td></tr>
+          <tr><td><strong>UberEats</strong></td><td>20 of 20</td><td><span class="tag tag-green">100%</span></td><td>Apr 8, 2026</td></tr>
+          <tr><td><strong>Grubhub</strong></td><td>16 of 20</td><td><span class="tag tag-orange">80%</span></td><td>Apr 9, 2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="why-banner"><span class="why-icon">i</span><div><strong>Access threshold met.</strong> 80%+ stores connected across platforms. You can proceed. Remaining 4 Grubhub stores can be added anytime.</div></div>
+  <div style="text-align:right;"><button class="btn btn-primary" onclick="showModule('connect')">Continue to Connect &rarr;</button></div>
+</div>
+
+<!-- ================================================================ -->
+<!-- CONNECT MODULE -->
+<!-- ================================================================ -->
+<div id="mod-connect" class="module-panel">
+  <div class="step-header">
+    <div class="step-eyebrow">Connect &middot; Integrations <span class="step-time">~5 min</span></div>
+    <h1>Connect Your Tools</h1>
+    <p>Link your ERP, POS, accounting, and communication tools. Data from these connections powers every Loop module.</p>
+  </div>
+  <div class="fomo-banner"><span class="fomo-icon">&#9888;</span><div><strong>Every day without connections = missed insights.</strong> Operators who connect ERP + POS within the first week see 3x faster time-to-value across Balance, TruROI, and Protect.</div></div>
+
+  <div class="card">
+    <div class="card-header"><h3>ERP &amp; Accounting</h3><span class="tag tag-blue">Recommended first</span></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px;">Required for Balance (reconciliation, journal entries) and financial reporting.</p>
+      <div class="connect-grid">
+        <div class="connect-card" onclick="connectTool(this,'r365')"><div class="cc-left"><div class="cc-icon">R</div><div class="cc-info"><h4>Restaurant365</h4><p>GL sync, COGS, payroll, P&L</p></div></div><button class="btn btn-sm btn-primary">Connect</button></div>
+        <div class="connect-card" onclick="connectTool(this,'qb')"><div class="cc-left"><div class="cc-icon">Q</div><div class="cc-info"><h4>QuickBooks</h4><p>GL, expense tracking, invoicing</p></div></div><button class="btn btn-sm btn-ghost">Connect</button></div>
+        <div class="connect-card" onclick="connectTool(this,'xero')"><div class="cc-left"><div class="cc-icon">X</div><div class="cc-info"><h4>Xero</h4><p>Accounting, bank reconciliation</p></div></div><button class="btn btn-sm btn-ghost">Connect</button></div>
+        <div class="connect-card" onclick="connectTool(this,'sage')"><div class="cc-left"><div class="cc-icon">S</div><div class="cc-info"><h4>Sage Intacct</h4><p>Enterprise GL, multi-entity</p></div></div><button class="btn btn-sm btn-ghost">Connect</button></div>
+      </div>
+      <div style="margin-top:10px;text-align:center;"><button class="btn-link">Don't see yours? Tell us &rarr;</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Point of Sale</h3></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px;">POS data enables reconciliation, powers COGS analysis, and validates marketplace order accuracy.</p>
+      <div class="connect-grid-3">
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'toast')"><div class="cc-icon" style="margin:0 auto 8px;">T</div><div class="cc-info" style="text-align:center;"><h4>Toast</h4><p>POS + payroll</p></div></div>
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'square')"><div class="cc-icon" style="margin:0 auto 8px;">Sq</div><div class="cc-info" style="text-align:center;"><h4>Square</h4><p>POS + payments</p></div></div>
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'aloha')"><div class="cc-icon" style="margin:0 auto 8px;">A</div><div class="cc-info" style="text-align:center;"><h4>Aloha (NCR)</h4><p>POS integration</p></div></div>
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'qsr')"><div class="cc-icon" style="margin:0 auto 8px;">QS</div><div class="cc-info" style="text-align:center;"><h4>QSRSoft</h4><p>Enterprise POS</p></div></div>
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'olo')"><div class="cc-icon" style="margin:0 auto 8px;">O</div><div class="cc-info" style="text-align:center;"><h4>Olo</h4><p>1st-party ordering</p></div></div>
+        <div class="connect-card" style="flex-direction:column;text-align:center;padding:18px 14px;" onclick="connectTool(this,'sftp')"><div class="cc-icon" style="margin:0 auto 8px;">&#8645;</div><div class="cc-info" style="text-align:center;"><h4>SFTP / File</h4><p>Custom data upload</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Communication &amp; Alerts</h3></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px;">Where should Loop send alerts, reports, and campaign approvals?</p>
+      <div class="connect-grid">
+        <div class="connect-card" onclick="connectTool(this,'slack')"><div class="cc-left"><div class="cc-icon">#</div><div class="cc-info"><h4>Slack</h4><p>Alerts, reports, approvals</p></div></div><button class="btn btn-sm btn-primary">Connect</button></div>
+        <div class="connect-card" onclick="connectTool(this,'teams')"><div class="cc-left"><div class="cc-icon">T</div><div class="cc-info"><h4>Microsoft Teams</h4><p>Alerts, reports, approvals</p></div></div><button class="btn btn-sm btn-ghost">Connect</button></div>
+        <div class="connect-card"><div class="cc-left"><div class="cc-icon">@</div><div class="cc-info"><h4>Email (default)</h4><p>Always on &mdash; configure in People step</p></div></div><span class="tag tag-green">Active</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-banner"><span class="why-icon">i</span><div><strong>Can't connect now?</strong> No problem. Come back anytime from Settings. But the sooner you connect, the faster your dashboards light up.</div></div>
+  <div style="display:flex;justify-content:space-between;margin-top:18px;">
+    <button class="btn btn-ghost" onclick="showModule('access')">&larr; Back</button>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <button class="btn-link" onclick="completeConnect()">Skip &mdash; I'll connect later</button>
+      <button class="btn btn-primary" onclick="completeConnect()">Continue to Business Setup &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- BUSINESS MODULE -->
+<!-- ================================================================ -->
+<div id="mod-business" class="module-panel">
+
+  <div class="sub-progress" id="biz-progress">
+    <div class="sp-item active" onclick="showBizStep('biz1')"><div class="sp-dot"></div><div class="sp-label">Verify</div></div>
+    <div class="sp-item" onclick="showBizStep('biz2')"><div class="sp-dot"></div><div class="sp-label">Calendar</div></div>
+    <div class="sp-item" onclick="showBizStep('biz3')"><div class="sp-dot"></div><div class="sp-label">People</div></div>
+    <div class="sp-item" onclick="showBizStep('biz4')"><div class="sp-dot"></div><div class="sp-label">Notifications</div></div>
+    <div class="sp-item" onclick="showBizStep('biz5')"><div class="sp-dot"></div><div class="sp-label">Brand</div></div>
+  </div>
+
+  <!-- BIZ 1: Verify Brands & Locations (EXPANDED with location lists) -->
+  <div id="biz1" class="step-panel active">
+    <div class="step-header">
+      <div class="step-eyebrow">Business &middot; Step 1 of 5 <span class="step-time">~3 min</span></div>
+      <h1>Verify Your Brands &amp; Locations</h1>
+      <p>We pulled this from your order form. Confirm brands, map locations, and flag any changes.</p>
+    </div>
+    <div class="prefill-banner"><span class="pf-icon">&#9889;</span><div><strong>Pre-filled from your contract.</strong> Total contracted locations: <strong>20</strong>. Review and map each brand to its locations.</div></div>
+
+    <!-- Contract summary -->
+    <div style="display:flex;gap:16px;margin-bottom:16px;">
+      <div style="flex:1;padding:14px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);">
+        <div style="font-size:11px;color:var(--text-light);font-weight:600;text-transform:uppercase;">Total Contracted</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);margin-top:2px;">20</div>
+        <div style="font-size:11px;color:var(--text-light);">From order form</div>
+      </div>
+      <div style="flex:1;padding:14px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);">
+        <div style="font-size:11px;color:var(--text-light);font-weight:600;text-transform:uppercase;">Access Verified</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green);margin-top:2px;">20</div>
+        <div style="font-size:11px;color:var(--text-light);">Across all platforms</div>
+      </div>
+      <div style="flex:1;padding:14px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);">
+        <div style="font-size:11px;color:var(--text-light);font-weight:600;text-transform:uppercase;">Mapped to Brands</div>
+        <div style="font-size:22px;font-weight:700;color:var(--accent);margin-top:2px;" id="mapped-count">20</div>
+        <div style="font-size:11px;color:var(--text-light);" id="unmapped-hint">0 remaining</div>
+      </div>
+    </div>
+
+    <!-- Brands with expandable locations -->
+    <div class="card">
+      <div class="card-header"><h3>Your Brands</h3><button class="btn btn-sm btn-ghost" onclick="addBrandRow()">+ Add Brand</button></div>
+      <div class="card-body" style="padding:0;">
+        <!-- Brand 1: Dave's Hot Chicken -->
+        <div id="brand-row-0" style="border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;" onclick="toggleBrandLocs(0)">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <span class="expand-toggle" id="exp-0">&#9654;</span>
+              <div>
+                <div style="font-size:14px;font-weight:600;">Dave's Hot Chicken</div>
+                <div style="font-size:11px;color:var(--text-light);">Franchisee &middot; Real Brand</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="tag tag-green">12 locations</span>
+              <select class="fi" style="width:130px;padding:5px 8px;font-size:11px;" onclick="event.stopPropagation()"><option selected>Franchisee</option><option>Franchisor</option><option>Fully Owned</option><option>CPA</option></select>
+            </div>
+          </div>
+          <div class="loc-expand" id="locs-0">
+            <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:8px;">ASSIGNED LOCATIONS (12)</div>
+            <div class="loc-chips" id="chips-0">
+              <div class="loc-chip">DHC Tampa Downtown <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-tampa-dt')">&times;</span></div>
+              <div class="loc-chip">DHC Tampa Westshore <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-tampa-ws')">&times;</span></div>
+              <div class="loc-chip">DHC Orlando I-Drive <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-orl-id')">&times;</span></div>
+              <div class="loc-chip">DHC Orlando Mills <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-orl-ml')">&times;</span></div>
+              <div class="loc-chip">DHC Jacksonville Beach <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-jax-bch')">&times;</span></div>
+              <div class="loc-chip">DHC Jacksonville South <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-jax-s')">&times;</span></div>
+              <div class="loc-chip">DHC Miami Brickell <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-mia-br')">&times;</span></div>
+              <div class="loc-chip">DHC Miami Doral <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-mia-drl')">&times;</span></div>
+              <div class="loc-chip">DHC Fort Lauderdale <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-ftl')">&times;</span></div>
+              <div class="loc-chip">DHC St. Petersburg <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-stpete')">&times;</span></div>
+              <div class="loc-chip">DHC Clearwater <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-clw')">&times;</span></div>
+              <div class="loc-chip">DHC Sarasota <span class="lc-x" onclick="removeLocFromBrand(0,'dhc-srq')">&times;</span></div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-sm btn-ghost" onclick="showLocPool(0)">+ Assign location</button>
+              <span style="font-size:11px;color:var(--text-light);" id="pool-hint-0">0 unassigned locations available</span>
+            </div>
+            <div id="loc-pool-0" style="display:none;margin-top:10px;padding:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);">
+              <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">AVAILABLE LOCATIONS (click to assign)</div>
+              <div id="pool-items-0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Brand 2: Slim Chickens -->
+        <div id="brand-row-1">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;" onclick="toggleBrandLocs(1)">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <span class="expand-toggle" id="exp-1">&#9654;</span>
+              <div>
+                <div style="font-size:14px;font-weight:600;">Slim Chickens</div>
+                <div style="font-size:11px;color:var(--text-light);">Franchisee &middot; Real Brand</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="tag tag-green">8 locations</span>
+              <select class="fi" style="width:130px;padding:5px 8px;font-size:11px;" onclick="event.stopPropagation()"><option selected>Franchisee</option><option>Franchisor</option><option>Fully Owned</option><option>CPA</option></select>
+            </div>
+          </div>
+          <div class="loc-expand" id="locs-1">
+            <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:8px;">ASSIGNED LOCATIONS (8)</div>
+            <div class="loc-chips" id="chips-1">
+              <div class="loc-chip">SC Tampa Carrollwood <span class="lc-x" onclick="removeLocFromBrand(1,'sc-tampa-cw')">&times;</span></div>
+              <div class="loc-chip">SC Orlando Colonial <span class="lc-x" onclick="removeLocFromBrand(1,'sc-orl-col')">&times;</span></div>
+              <div class="loc-chip">SC Jacksonville Riverside <span class="lc-x" onclick="removeLocFromBrand(1,'sc-jax-rv')">&times;</span></div>
+              <div class="loc-chip">SC Tallahassee <span class="lc-x" onclick="removeLocFromBrand(1,'sc-tally')">&times;</span></div>
+              <div class="loc-chip">SC Gainesville <span class="lc-x" onclick="removeLocFromBrand(1,'sc-gnv')">&times;</span></div>
+              <div class="loc-chip">SC Pensacola <span class="lc-x" onclick="removeLocFromBrand(1,'sc-pcola')">&times;</span></div>
+              <div class="loc-chip">SC Naples <span class="lc-x" onclick="removeLocFromBrand(1,'sc-naples')">&times;</span></div>
+              <div class="loc-chip">SC Lakeland <span class="lc-x" onclick="removeLocFromBrand(1,'sc-lake')">&times;</span></div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-sm btn-ghost" onclick="showLocPool(1)">+ Assign location</button>
+              <span style="font-size:11px;color:var(--text-light);" id="pool-hint-1">0 unassigned locations available</span>
+            </div>
+            <div id="loc-pool-1" style="display:none;margin-top:10px;padding:12px;background:var(--white);border:1px solid var(--border);border-radius:var(--rs);">
+              <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">AVAILABLE LOCATIONS (click to assign)</div>
+              <div id="pool-items-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="new-brands-area"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Corporate Involvement</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Dave's Hot Chicken</label><select class="fi prefilled"><option>None</option><option selected>Aware of deployment</option><option>Active participant</option></select></div>
+          <div class="fg"><label class="fl">Slim Chickens</label><select class="fi prefilled"><option selected>None</option><option>Aware of deployment</option><option>Active participant</option></select></div>
+        </div>
+      </div>
+      <div class="card-footer"><span style="font-size:12px;color:var(--text-light);">Auto-saved</span><button class="btn btn-primary" onclick="bizGoTo('biz2',2)">Looks good, continue &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- BIZ 2: Calendar & Periods -->
+  <div id="biz2" class="step-panel">
+    <div class="step-header">
+      <div class="step-eyebrow">Business &middot; Step 2 of 5 <span class="step-time">~2 min</span></div>
+      <h1>Calendar &amp; Period Design</h1>
+      <p>Define your fiscal calendar, period structure, and comp store rules. This drives reporting across every Loop module.</p>
+    </div>
+    <div class="why-banner"><span class="why-icon">i</span><div><strong>Set once, used everywhere.</strong> Your period calendar powers Balance P&L, TruROI campaign cycles, and operational cadences.</div></div>
+
+    <div class="card">
+      <div class="card-header"><h3>Fiscal Calendar</h3></div>
+      <div class="card-body">
+        <div class="brand-pills"><div class="brand-pill active">Dave's Hot Chicken</div><div class="brand-pill">Slim Chickens</div></div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Fiscal Year Starts</label><select class="fi"><option selected>January</option><option>February</option><option>April</option><option>July</option><option>October</option></select></div>
+          <div class="fg"><label class="fl">Fiscal Year Ends</label><select class="fi"><option selected>December</option><option>March</option><option>June</option><option>September</option></select></div>
+          <div class="fg"><label class="fl">Period Type</label><select class="fi" id="period-type" onchange="generatePeriods()"><option selected>Calendar Month (12 periods)</option><option>4-4-5 (13 periods)</option><option>4-5-4 (13 periods)</option><option>5-4-4 (13 periods)</option><option>Custom</option></select></div>
+          <div class="fg"><label class="fl">Number of Periods</label><input class="fi" id="period-count" value="12" readonly></div>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label class="fl" style="font-size:13px;">Generated Period Schedule (2026)</label>
+            <button class="btn-link" onclick="document.getElementById('period-upload-area').style.display='block'">Or upload your own</button>
+          </div>
+          <div class="period-grid" id="period-preview">
+            <div class="period-cell"><div class="pc-num">P1</div><div class="pc-dates">Jan 1 - Jan 31</div></div>
+            <div class="period-cell"><div class="pc-num">P2</div><div class="pc-dates">Feb 1 - Feb 28</div></div>
+            <div class="period-cell"><div class="pc-num">P3</div><div class="pc-dates">Mar 1 - Mar 31</div></div>
+            <div class="period-cell"><div class="pc-num">P4</div><div class="pc-dates">Apr 1 - Apr 30</div></div>
+            <div class="period-cell"><div class="pc-num">P5</div><div class="pc-dates">May 1 - May 31</div></div>
+            <div class="period-cell"><div class="pc-num">P6</div><div class="pc-dates">Jun 1 - Jun 30</div></div>
+            <div class="period-cell"><div class="pc-num">P7</div><div class="pc-dates">Jul 1 - Jul 31</div></div>
+            <div class="period-cell"><div class="pc-num">P8</div><div class="pc-dates">Aug 1 - Aug 31</div></div>
+            <div class="period-cell"><div class="pc-num">P9</div><div class="pc-dates">Sep 1 - Sep 30</div></div>
+            <div class="period-cell"><div class="pc-num">P10</div><div class="pc-dates">Oct 1 - Oct 31</div></div>
+            <div class="period-cell"><div class="pc-num">P11</div><div class="pc-dates">Nov 1 - Nov 30</div></div>
+            <div class="period-cell"><div class="pc-num">P12</div><div class="pc-dates">Dec 1 - Dec 31</div></div>
+          </div>
+          <div id="period-upload-area" style="display:none;margin-top:12px;">
+            <div class="upload-zone" style="padding:16px;" onclick="document.getElementById('period-file').click()">
+              <input type="file" id="period-file" accept=".csv,.xlsx" style="display:none;" onchange="handlePeriodUpload(this)">
+              <div class="uz-text">Upload your period calendar <strong>(CSV or Excel)</strong></div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Columns: Period#, StartDate, EndDate</div>
+            </div>
+          </div>
+        </div>
+        <div class="toggle-row" style="margin-top:14px;"><span class="toggle-label">Same calendar for all brands?</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Comparable Store Definition</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="fg"><label class="fl">A store is "comped" after</label><select class="fi"><option selected>12 months from open date</option><option>18 months from open date</option><option>Custom</option></select><span class="fi-hint">Newer stores excluded from same-store-sales (SSS)</span></div>
+          <div class="fg"><label class="fl">SSS Eligibility</label><select class="fi"><option selected>Same as comp definition</option><option>Custom SSS rules</option></select></div>
+        </div>
+      </div>
+      <div class="card-footer"><button class="btn btn-ghost" onclick="bizGoTo('biz1',1)">&larr; Back</button><button class="btn btn-primary" onclick="bizGoTo('biz3',3)">Continue &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- BIZ 3: People & Roles (FIXED: scroll indicator + brand selector) -->
+  <div id="biz3" class="step-panel">
+    <div class="step-header">
+      <div class="step-eyebrow">Business &middot; Step 3 of 5 <span class="step-time">~2 min</span></div>
+      <h1>People &amp; Roles</h1>
+      <p>Who are the key people? What roles do they play? This determines access levels and report distribution.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Key People</h3><button class="btn btn-sm btn-ghost" onclick="addPersonRow()">+ Add person</button></div>
+      <div class="card-body" style="padding:0;">
+        <div class="scroll-wrap">
+          <div style="padding:6px 20px 0;font-size:10px;color:var(--accent-text);font-weight:600;display:flex;align-items:center;gap:4px;">&#8596; Scroll horizontally to see all columns</div>
+          <div class="scroll-inner">
+            <table class="data-table" style="min-width:720px;">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Brands</th><th>Access Level</th></tr></thead>
+              <tbody id="people-tbody">
+                <tr>
+                  <td><input class="fi prefilled" value="Marcus Johnson" style="width:130px;"></td>
+                  <td><input class="fi prefilled" value="marcus@example.com" style="width:170px;"></td>
+                  <td><select class="fi" style="width:120px;"><option>Owner</option><option selected>Marketing</option><option>Operations</option><option>Finance</option><option>GM / Manager</option></select></td>
+                  <td><select class="fi" style="width:140px;"><option selected>All Brands</option><option>Dave's Hot Chicken</option><option>Slim Chickens</option></select></td>
+                  <td><select class="fi" style="width:120px;"><option selected>Full Access</option><option>Reports Only</option><option>View Only</option></select></td>
+                </tr>
+                <tr>
+                  <td><input class="fi" value="Sarah Chen" style="width:130px;"></td>
+                  <td><input class="fi" value="sarah@example.com" style="width:170px;"></td>
+                  <td><select class="fi" style="width:120px;"><option selected>Owner</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>GM / Manager</option></select></td>
+                  <td><select class="fi" style="width:140px;"><option selected>All Brands</option><option>Dave's Hot Chicken</option><option>Slim Chickens</option></select></td>
+                  <td><select class="fi" style="width:120px;"><option selected>Full Access</option><option>Reports Only</option><option>View Only</option></select></td>
+                </tr>
+                <tr>
+                  <td><input class="fi" value="Jake Miller" style="width:130px;"></td>
+                  <td><input class="fi" value="jake@example.com" style="width:170px;"></td>
+                  <td><select class="fi" style="width:120px;"><option>Owner</option><option>Marketing</option><option selected>Operations</option><option>Finance</option><option>GM / Manager</option></select></td>
+                  <td><select class="fi" style="width:140px;"><option>All Brands</option><option selected>Dave's Hot Chicken</option><option>Slim Chickens</option></select></td>
+                  <td><select class="fi" style="width:120px;"><option>Full Access</option><option selected>Reports Only</option><option>View Only</option></select></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span><button class="btn-link" onclick="document.getElementById('people-csv').click()">Upload a list (CSV)</button><input type="file" id="people-csv" accept=".csv,.xlsx" style="display:none;"></span>
+        <button class="btn btn-primary" onclick="bizGoTo('biz4',4)">Continue &rarr;</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Marketing Structure</h3></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="fg"><label class="fl">How is marketing managed?</label><select class="fi prefilled"><option>We manage it ourselves</option><option selected>We work with marketplace reps</option><option>Agency handles it</option><option>Corporate runs national campaigns</option><option>Co-op (corporate + local)</option></select></div>
+          <div class="fg"><label class="fl">Campaign approval process</label><select class="fi"><option selected>Owner approves all</option><option>Marketing lead approves</option><option>No approval needed</option><option>Corporate approves</option></select></div>
+        </div>
+        <div class="toggle-row" style="margin-top:10px;"><span class="toggle-label">Corporate runs national campaigns affecting your stores?</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="card-footer"><button class="btn btn-ghost" onclick="bizGoTo('biz2',2)">&larr; Back</button><button class="btn btn-primary" onclick="bizGoTo('biz4',4)">Continue &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- BIZ 4: Reports & Notifications (FIXED: scroll indicator + MORE reports) -->
+  <div id="biz4" class="step-panel">
+    <div class="step-header">
+      <div class="step-eyebrow">Business &middot; Step 4 of 5 <span class="step-time">~3 min</span></div>
+      <h1>Reports &amp; Notifications</h1>
+      <p>Choose which reports each person receives. Enable or disable by person and set frequency.</p>
+    </div>
+    <div class="why-banner"><span class="why-icon">i</span><div><strong>Getting the right reports to the right people</strong> is the single biggest driver of engagement. Customers who configure notifications in week 1 have 4x higher product adoption.</div></div>
+
+    <div class="card">
+      <div class="card-header"><h3>Report Distribution</h3></div>
+      <div class="card-body" style="padding:0;">
+        <div class="scroll-wrap">
+          <div style="padding:6px 20px 0;font-size:10px;color:var(--accent-text);font-weight:600;display:flex;align-items:center;gap:4px;">&#8596; Scroll horizontally to see all people</div>
+          <div class="scroll-inner">
+            <table class="notif-table" style="min-width:760px;">
+              <thead>
+                <tr>
+                  <th style="width:200px;">Report</th>
+                  <th>Frequency</th>
+                  <th style="text-align:center;">Marcus<br><span style="font-weight:400;text-transform:none;">Marketing</span></th>
+                  <th style="text-align:center;">Sarah<br><span style="font-weight:400;text-transform:none;">Owner</span></th>
+                  <th style="text-align:center;">Jake<br><span style="font-weight:400;text-transform:none;">Ops</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- OPERATIONS (PROTECT) -->
+                <tr style="background:var(--bg);"><td colspan="5" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-text);padding:8px 12px;">Operations (Protect)</td></tr>
+                <tr><td><strong>Guard Summary</strong><div style="font-size:10px;color:var(--text-light);">Store outages, downtime alerts</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Daily</option><option>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Recover Digest</strong><div style="font-size:10px;color:var(--text-light);">Chargebacks disputed, won, lost</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Error Rate Alert</strong><div style="font-size:10px;color:var(--text-light);">Spikes in order errors by store</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Store Performance Scorecard</strong><div style="font-size:10px;color:var(--text-light);">Per-store KPIs: sales, errors, ratings</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Monthly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Daily Sales Digest</strong><div style="font-size:10px;color:var(--text-light);">Yesterday's sales, orders, AOV</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Menu &amp; Item Performance</strong><div style="font-size:10px;color:var(--text-light);">Item mix, attach rates, availability</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Monthly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+
+                <!-- MARKETING (TRUROI) -->
+                <tr style="background:var(--bg);"><td colspan="5" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-text);padding:8px 12px;">Marketing (TruROI)</td></tr>
+                <tr><td><strong>Marketing Perf Report</strong><div style="font-size:10px;color:var(--text-light);">Campaign ROI, spend efficiency</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Monthly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Campaign Approval</strong><div style="font-size:10px;color:var(--text-light);">New plans ready for review</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Re-Engage Alerts</strong><div style="font-size:10px;color:var(--text-light);">Review responses, rating changes</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Real-time</option><option selected>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Competitive Insights</strong><div style="font-size:10px;color:var(--text-light);">Competitor pricing & promo changes</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+
+                <!-- FINANCE (BALANCE) -->
+                <tr style="background:var(--bg);"><td colspan="5" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-text);padding:8px 12px;">Finance (Balance)</td></tr>
+                <tr><td><strong>P&amp;L Report</strong><div style="font-size:10px;color:var(--text-light);">Periodic income statement</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Weekly</option><option selected>Per Period</option><option>Monthly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Reconciliation Summary</strong><div style="font-size:10px;color:var(--text-light);">Payout vs. expected variance</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Payout Alert</strong><div style="font-size:10px;color:var(--text-light);">Missing or anomalous payouts</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Invoice &amp; Payment Notice</strong><div style="font-size:10px;color:var(--text-light);">New invoice, payment confirmed, past due</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+
+                <!-- AI & BI -->
+                <tr style="background:var(--bg);"><td colspan="5" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-text);padding:8px 12px;">AI &amp; BI</td></tr>
+                <tr><td><strong>Overwatch Activations</strong><div style="font-size:10px;color:var(--text-light);">Custom dashboard alerts triggered</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Scheduled Reports</strong><div style="font-size:10px;color:var(--text-light);">Loop Sheets &amp; custom exports</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option>Daily</option><option selected>Weekly</option><option>Monthly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox"></td></tr>
+                <tr><td><strong>Weekly Business Review</strong><div style="font-size:10px;color:var(--text-light);">AI-generated cross-module summary</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Weekly</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+                <tr><td><strong>Anomaly Detection</strong><div style="font-size:10px;color:var(--text-light);">Unusual patterns in orders/revenue</div></td><td><select class="fi" style="width:90px;padding:5px 8px;font-size:11px;"><option selected>Real-time</option><option>Daily</option><option>Off</option></select></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox" checked></td><td style="text-align:center;"><input type="checkbox" checked></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span style="font-size:11px;color:var(--text-light);">Delivery: Email + Slack (if connected)</span>
+        <button class="btn btn-primary" onclick="bizGoTo('biz5',5)">Continue &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BIZ 5: Brand Identity (RESTORED Report Template) -->
+  <div id="biz5" class="step-panel">
+    <div class="step-header">
+      <div class="step-eyebrow">Business &middot; Step 5 of 5 <span class="step-time">~2 min</span></div>
+      <h1>Brand Identity</h1>
+      <p>Logo, colors, AI persona, and report templates. Used for branded reports, dashboards, and your Loop AI assistant.</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="brand-pills" style="margin-bottom:18px;"><div class="brand-pill active">Dave's Hot Chicken</div><div class="brand-pill">Slim Chickens</div></div>
+        <div class="form-grid">
+          <div class="fg">
+            <label class="fl">Brand Logo</label>
+            <div class="upload-zone" style="padding:14px;" onclick="document.getElementById('logo-file').click()">
+              <input type="file" id="logo-file" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+              <div id="logo-preview" style="margin-bottom:6px;">
+                <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style="border-radius:12px;border:2px solid var(--border);background:white;">
+                  <rect width="80" height="80" rx="12" fill="#FFF5F5"/>
+                  <text x="40" y="32" text-anchor="middle" font-size="24" font-weight="800" fill="#e63946">D</text>
+                  <text x="40" y="50" text-anchor="middle" font-size="8" font-weight="700" fill="#e63946" letter-spacing="1">DAVE'S HOT</text>
+                  <text x="40" y="60" text-anchor="middle" font-size="8" font-weight="700" fill="#e63946" letter-spacing="1">CHICKEN</text>
+                </svg>
+              </div>
+              <div style="font-size:11px;color:var(--green-text);font-weight:600;">Auto-detected from website</div>
+              <div class="uz-text" style="font-size:12px;">Click to upload higher-res</div>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Brand Colors</label>
+            <div class="swatch-row">
+              <div class="swatch"><div class="swatch-circle" style="background:#e63946;"></div><span>Primary</span></div>
+              <div class="swatch"><div class="swatch-circle" style="background:#1d3557;"></div><span>Secondary</span></div>
+              <div class="swatch"><div class="swatch-circle" style="background:#f1faee;"></div><span>Accent</span></div>
+            </div>
+            <span class="fi-hint" style="margin-top:8px;">Auto-extracted. Click any swatch to change.</span>
+          </div>
+          <div class="fg"><label class="fl">AI Persona Name <span class="opt">optional</span></label><input class="fi" placeholder="e.g. Dave Z, ChickenBot"><span class="fi-hint">Name your Loop AI assistant</span></div>
+          <div class="fg"><label class="fl">Website</label><input class="fi prefilled" value="https://daveshotchicken.com"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT TEMPLATE (RESTORED) -->
+    <div class="card">
+      <div class="card-header"><h3>Report Template</h3><span class="tag tag-blue">Branded</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px;">Customize how your Loop reports look. These settings apply to all exported PDFs, scheduled emails, and dashboards.</p>
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Report Title Prefix</label><input class="fi prefilled" value="Dave's Hot Chicken"><span class="fi-hint">Appears in header of all reports</span></div>
+          <div class="fg"><label class="fl">Default Export Format</label><select class="fi"><option selected>PDF</option><option>Excel (.xlsx)</option><option>Both PDF + Excel</option><option>Google Sheets link</option></select></div>
+          <div class="fg">
+            <label class="fl">Include in Reports</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+              <label style="font-size:12px;color:var(--text-sec);display:flex;align-items:center;gap:8px;"><input type="checkbox" checked> Brand logo in header</label>
+              <label style="font-size:12px;color:var(--text-sec);display:flex;align-items:center;gap:8px;"><input type="checkbox" checked> Brand colors on charts &amp; headers</label>
+              <label style="font-size:12px;color:var(--text-sec);display:flex;align-items:center;gap:8px;"><input type="checkbox"> Cover page on multi-page reports</label>
+              <label style="font-size:12px;color:var(--text-sec);display:flex;align-items:center;gap:8px;"><input type="checkbox" checked> Period dates in footer</label>
+            </div>
+          </div>
+          <div class="fg"><label class="fl">Custom Footer Text <span class="opt">optional</span></label><input class="fi" placeholder="e.g. Confidential - Internal Use Only"><span class="fi-hint">Appears at bottom of every report page</span></div>
+        </div>
+
+        <!-- Live preview -->
+        <div style="margin-top:16px;">
+          <label class="fl" style="margin-bottom:6px;">Preview</label>
+          <div class="rt-preview">
+            <div class="rt-bar" style="background:linear-gradient(135deg,#e63946,#1d3557);">
+              <div class="rt-logo-ph"></div>
+              <div class="rt-title">Dave's Hot Chicken &mdash; Weekly Business Review</div>
+            </div>
+            <div class="rt-body-preview">
+              <div style="display:flex;gap:16px;margin-bottom:8px;">
+                <div style="flex:1;height:40px;background:var(--bg);border-radius:6px;"></div>
+                <div style="flex:1;height:40px;background:var(--bg);border-radius:6px;"></div>
+                <div style="flex:1;height:40px;background:var(--bg);border-radius:6px;"></div>
+              </div>
+              <div style="height:24px;background:var(--bg);border-radius:4px;width:60%;"></div>
+            </div>
+            <div class="rt-footer-preview">P5 &middot; May 1 - May 31, 2026 &middot; Confidential</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:12px;">
+      <button class="btn btn-ghost" onclick="bizGoTo('biz4',4)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="completeBusiness()">Complete Business Setup &rarr;</button>
+    </div>
+  </div>
+
+  <!-- BIZ COMPLETE -->
+  <div id="biz-complete" class="step-panel">
+    <div class="complete-wrap">
+      <div class="complete-icon">&#10003;</div>
+      <h1>Business Setup Complete</h1>
+      <p>Your business profile, calendar, team, notifications, and report templates are configured. Your Loop dashboards are being prepared.</p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button class="btn btn-primary" onclick="showModule('billing')">Continue to Billing &rarr;</button>
+      </div>
+      <div style="margin-top:24px;padding:16px 20px;background:var(--accent-soft);border-radius:var(--r);max-width:420px;margin-left:auto;margin-right:auto;text-align:left;">
+        <div style="font-size:13px;font-weight:600;color:var(--accent-text);margin-bottom:6px;">What happens next?</div>
+        <div style="font-size:12px;color:var(--text-sec);line-height:1.7;">
+          1. Ops team runs QC on your account (&lt; 24 hrs)<br>
+          2. Your dashboards go live with real data<br>
+          3. CSM schedules your kickoff call<br>
+          4. Complete Billing setup to finalize invoicing
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- BILLING MODULE (REBUILT: contract verify + billing entities) -->
+<!-- ================================================================ -->
+<div id="mod-billing" class="module-panel">
+  <div class="step-header">
+    <div class="step-eyebrow">Billing Setup <span class="step-time">~5 min</span></div>
+    <h1>Billing Setup</h1>
+    <p>Verify your contract, create billing entities, and set up payment. This ensures accurate invoicing from day one.</p>
+  </div>
+
+  <!-- Billing highlights (KEPT per user) -->
+  <div class="billing-stats">
+    <div class="b-stat"><div class="b-stat-label">Contract Status</div><div class="b-stat-value" style="font-size:16px;">Active</div><div class="b-stat-sub">Signed Dec 15, 2025</div></div>
+    <div class="b-stat"><div class="b-stat-label">Locations</div><div class="b-stat-value">20</div><div class="b-stat-sub">12 Dave's + 8 Slim</div></div>
+    <div class="b-stat"><div class="b-stat-label">Est. Monthly</div><div class="b-stat-value">$3,690</div><div class="b-stat-sub">Based on contract</div></div>
+    <div class="b-stat"><div class="b-stat-label">Billing Cycle</div><div class="b-stat-value" style="font-size:16px;">Monthly</div><div class="b-stat-sub">1st of each month</div></div>
+  </div>
+
+  <!-- Step 1: Contract Verification -->
+  <div class="card">
+    <div class="card-header"><h3>Step 1: Verify Your Contract</h3><span class="tag tag-orange" id="cv-status">Pending Verification</span></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:14px;">Please review the key terms below and confirm they match your understanding.</p>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:16px 20px;">
+        <div class="cv-row"><span class="cv-label">Contract Date</span><span class="cv-value">December 15, 2025</span></div>
+        <div class="cv-row"><span class="cv-label">Customer Entity</span><span class="cv-value">Hammorg Foods LLC</span></div>
+        <div class="cv-row"><span class="cv-label">Total Contracted Locations</span><span class="cv-value">20</span></div>
+        <div class="cv-row"><span class="cv-label">Contract Term</span><span class="cv-value">12 months (auto-renew)</span></div>
+        <div class="cv-row"><span class="cv-label">Payment Terms</span><span class="cv-value">Net 30</span></div>
+        <div class="cv-row"><span class="cv-label">Billing Frequency</span><span class="cv-value">Monthly</span></div>
+      </div>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <!-- Active Products (KEPT per user) -->
+      <div style="font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Active Products</div>
+      <table class="data-table">
+        <thead><tr><th>Product</th><th>Locations</th><th>PPL/mo</th><th>Monthly</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>TruROI+</strong></td><td>20</td><td>$100</td><td><strong>$2,000</strong></td><td><span class="tag tag-teal">Active</span></td></tr>
+          <tr><td><strong>Recover</strong></td><td>20</td><td>$15</td><td><strong>$300</strong></td><td><span class="tag tag-teal">Active</span></td></tr>
+          <tr><td><strong>Guard</strong></td><td>20</td><td>$49</td><td><strong>$980</strong></td><td><span class="tag tag-teal">Active</span></td></tr>
+          <tr><td><strong>Balance</strong></td><td>20</td><td>$20.50</td><td><strong>$410</strong></td><td><span class="tag tag-teal">Active</span></td></tr>
+          <tr style="background:var(--bg);font-weight:700;"><td>Total</td><td>20</td><td></td><td><strong style="color:var(--accent);">$3,690/mo</strong></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer">
+      <button class="btn-link" onclick="alert('Opens a form to flag discrepancies to your CSM')">Something doesn't look right?</button>
+      <button class="btn btn-primary" onclick="verifyContract()">I verify this is correct &#10003;</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Billing Entity Structure -->
+  <div class="card" id="billing-entity-section">
+    <div class="card-header"><h3>Step 2: Create Billing Entities</h3></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:16px;">How would you like your locations grouped for invoicing? Choose a billing structure below.</p>
+
+      <div class="bs-options">
+        <div class="bs-option" id="bs-single" onclick="selectBillingStructure('single')">
+          <h4>Single Entity</h4>
+          <p>One billing entity for all 20 locations. One invoice per month.</p>
+        </div>
+        <div class="bs-option" id="bs-grouped" onclick="selectBillingStructure('grouped')">
+          <h4>Grouped</h4>
+          <p>Group locations into a few billing entities (e.g. by brand). Multiple invoices.</p>
+        </div>
+        <div class="bs-option" id="bs-perloc" onclick="selectBillingStructure('perloc')">
+          <h4>Per-Location</h4>
+          <p>Every location is its own billing entity. 20 separate invoices.</p>
+        </div>
+      </div>
+
+      <!-- SINGLE entity form -->
+      <div id="be-form-single" style="display:none;">
+        <div class="be-card">
+          <div class="be-header"><h4>Billing Entity: Hammorg Foods LLC</h4><span class="tag tag-green">All 20 locations</span></div>
+          <div class="be-body">
+            <div class="form-grid">
+              <div class="fg"><label class="fl">Account Manager Name *</label><input class="fi" placeholder="Full name" id="be-s-name"></div>
+              <div class="fg"><label class="fl">Account Manager Email *</label><input class="fi" placeholder="billing@company.com" id="be-s-email"></div>
+              <div class="fg"><label class="fl">Phone *</label><input class="fi" placeholder="(555) 123-4567" id="be-s-phone"></div>
+              <div class="fg"><label class="fl">Payment Method *</label><select class="fi" id="be-s-pay"><option value="">Select...</option><option>Credit Card</option><option>ACH / Bank Transfer</option><option>Wire Transfer</option><option>Check</option></select></div>
+              <div class="fg full"><label class="fl">Billing Address</label><input class="fi" placeholder="Street, City, State ZIP"></div>
+            </div>
+            <div style="margin-top:12px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">LOCATIONS (20)</div>
+              <div class="loc-chips">
+                <div class="loc-chip">DHC Tampa Downtown</div><div class="loc-chip">DHC Tampa Westshore</div><div class="loc-chip">DHC Orlando I-Drive</div><div class="loc-chip">DHC Orlando Mills</div><div class="loc-chip">DHC Jacksonville Beach</div><div class="loc-chip">DHC Jacksonville South</div><div class="loc-chip">DHC Miami Brickell</div><div class="loc-chip">DHC Miami Doral</div><div class="loc-chip">DHC Fort Lauderdale</div><div class="loc-chip">DHC St. Petersburg</div><div class="loc-chip">DHC Clearwater</div><div class="loc-chip">DHC Sarasota</div>
+                <div class="loc-chip">SC Tampa Carrollwood</div><div class="loc-chip">SC Orlando Colonial</div><div class="loc-chip">SC Jacksonville Riverside</div><div class="loc-chip">SC Tallahassee</div><div class="loc-chip">SC Gainesville</div><div class="loc-chip">SC Pensacola</div><div class="loc-chip">SC Naples</div><div class="loc-chip">SC Lakeland</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GROUPED entity form -->
+      <div id="be-form-grouped" style="display:none;">
+        <div class="be-card" id="be-group-0">
+          <div class="be-header"><h4>Billing Entity 1: Dave's Hot Chicken</h4><span class="tag">12 locations</span></div>
+          <div class="be-body">
+            <div class="form-grid">
+              <div class="fg"><label class="fl">Account Manager Name *</label><input class="fi" placeholder="Full name"></div>
+              <div class="fg"><label class="fl">Account Manager Email *</label><input class="fi" placeholder="billing@company.com"></div>
+              <div class="fg"><label class="fl">Phone *</label><input class="fi" placeholder="(555) 123-4567"></div>
+              <div class="fg"><label class="fl">Payment Method *</label><select class="fi"><option value="">Select...</option><option>Credit Card</option><option>ACH / Bank Transfer</option><option>Wire Transfer</option><option>Check</option></select></div>
+              <div class="fg full"><label class="fl">Billing Address</label><input class="fi" placeholder="Street, City, State ZIP"></div>
+            </div>
+            <div style="margin-top:12px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">LOCATIONS (12)</div>
+              <div class="loc-chips">
+                <div class="loc-chip">DHC Tampa Downtown</div><div class="loc-chip">DHC Tampa Westshore</div><div class="loc-chip">DHC Orlando I-Drive</div><div class="loc-chip">DHC Orlando Mills</div><div class="loc-chip">DHC Jacksonville Beach</div><div class="loc-chip">DHC Jacksonville South</div><div class="loc-chip">DHC Miami Brickell</div><div class="loc-chip">DHC Miami Doral</div><div class="loc-chip">DHC Fort Lauderdale</div><div class="loc-chip">DHC St. Petersburg</div><div class="loc-chip">DHC Clearwater</div><div class="loc-chip">DHC Sarasota</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="be-card" id="be-group-1">
+          <div class="be-header"><h4>Billing Entity 2: Slim Chickens</h4><span class="tag">8 locations</span></div>
+          <div class="be-body">
+            <div class="form-grid">
+              <div class="fg"><label class="fl">Account Manager Name *</label><input class="fi" placeholder="Full name"></div>
+              <div class="fg"><label class="fl">Account Manager Email *</label><input class="fi" placeholder="billing@company.com"></div>
+              <div class="fg"><label class="fl">Phone *</label><input class="fi" placeholder="(555) 123-4567"></div>
+              <div class="fg"><label class="fl">Payment Method *</label><select class="fi"><option value="">Select...</option><option>Credit Card</option><option>ACH / Bank Transfer</option><option>Wire Transfer</option><option>Check</option></select></div>
+              <div class="fg full"><label class="fl">Billing Address</label><input class="fi" placeholder="Street, City, State ZIP"></div>
+            </div>
+            <div style="margin-top:12px;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">LOCATIONS (8)</div>
+              <div class="loc-chips">
+                <div class="loc-chip">SC Tampa Carrollwood</div><div class="loc-chip">SC Orlando Colonial</div><div class="loc-chip">SC Jacksonville Riverside</div><div class="loc-chip">SC Tallahassee</div><div class="loc-chip">SC Gainesville</div><div class="loc-chip">SC Pensacola</div><div class="loc-chip">SC Naples</div><div class="loc-chip">SC Lakeland</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="addBillingGroup()" style="margin-bottom:12px;">+ Add another billing group</button>
+      </div>
+
+      <!-- PER-LOCATION entity form -->
+      <div id="be-form-perloc" style="display:none;">
+        <div class="why-banner"><span class="why-icon">i</span><div><strong>Per-location billing</strong> creates 20 separate billing entities. Each location gets its own invoice. You'll need to provide account manager details for each.</div></div>
+        <div id="perloc-entities"></div>
+        <div style="text-align:center;margin-top:12px;">
+          <button class="btn btn-primary" onclick="generatePerLocEntities()">Generate 20 Billing Entities</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Payment Method -->
+  <div class="card">
+    <div class="card-header"><h3>Step 3: Payment Method</h3></div>
+    <div class="card-body" style="text-align:center;padding:28px 20px;">
+      <div style="font-size:14px;color:var(--text-sec);margin-bottom:16px;">Set up your payment method securely through our billing portal.</div>
+      <button class="btn btn-primary" onclick="alert('Redirects to Stripe/Zenskar payment portal')">Set Up Payment Method &rarr;</button>
+      <div style="font-size:11px;color:var(--text-light);margin-top:10px;">Secure redirect to payment portal &middot; ACH, Credit Card, or Wire</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-light);">Questions about billing? Contact <a href="#" style="color:var(--accent-text);">billing@loopai.com</a> or your CSM.</div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// MODULE SWITCHING
+function showModule(mod) {
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('mod-' + mod).classList.add('active');
+  document.querySelectorAll('.mod-tab').forEach(t => t.classList.remove('active'));
+  const tabs = document.querySelectorAll('.mod-tab');
+  const map = {access:0, connect:1, business:2, billing:3};
+  tabs[map[mod]].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// BUSINESS STEP NAV
+const bizSteps = ['biz1','biz2','biz3','biz4','biz5'];
+function bizGoTo(id,n) { showBizStep(id); }
+function showBizStep(id) {
+  document.querySelectorAll('#mod-business .step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const dots = document.querySelectorAll('#biz-progress .sp-item');
+  const idx = bizSteps.indexOf(id);
+  if (idx >= 0) {
+    dots.forEach((dot,i) => {
+      dot.classList.remove('active','done');
+      if (i < idx) dot.classList.add('done');
+      if (i === idx) dot.classList.add('active');
+    });
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function completeBusiness() {
+  document.querySelectorAll('#mod-business .step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('biz-complete').classList.add('active');
+  document.querySelectorAll('#biz-progress .sp-item').forEach(d => { d.classList.remove('active'); d.classList.add('done'); });
+  document.getElementById('badge-business').textContent = 'Complete';
+  document.getElementById('badge-business').className = 'mt-badge done';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function completeConnect() {
+  document.getElementById('badge-connect').textContent = 'Complete';
+  document.getElementById('badge-connect').className = 'mt-badge done';
+  document.getElementById('badge-business').textContent = 'In Progress';
+  document.getElementById('badge-business').className = 'mt-badge active';
+  showModule('business');
+}
+
+// CONNECT TOOLS
+function connectTool(card, name) {
+  if (card) card.classList.add('connected');
+  const btn = card.querySelector('button');
+  if (btn) {
+    btn.textContent = 'Connected';
+    btn.className = 'btn btn-sm btn-ghost';
+    btn.style.color = 'var(--green-text)';
+    btn.style.borderColor = 'var(--green)';
+    btn.disabled = true;
+  }
+}
+
+// BRAND LOCATION MANAGEMENT
+function toggleBrandLocs(idx) {
+  const el = document.getElementById('locs-' + idx);
+  const arrow = document.getElementById('exp-' + idx);
+  if (el.classList.contains('open')) {
+    el.classList.remove('open');
+    el.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  } else {
+    el.classList.add('open');
+    el.style.display = 'block';
+    arrow.style.transform = 'rotate(90deg)';
+  }
+}
+
+function showLocPool(idx) {
+  const pool = document.getElementById('loc-pool-' + idx);
+  pool.style.display = pool.style.display === 'none' ? 'block' : 'none';
+}
+
+function removeLocFromBrand(brandIdx, locId) {
+  event.stopPropagation();
+  const chip = event.target.closest('.loc-chip');
+  if (chip && confirm('Remove this location from the brand?')) {
+    chip.remove();
+  }
+}
+
+function addBrandRow() {
+  const area = document.getElementById('new-brands-area');
+  const idx = document.querySelectorAll('[id^="brand-row-"]').length;
+  const div = document.createElement('div');
+  div.id = 'brand-row-' + idx;
+  div.style.borderTop = '1px solid var(--border)';
+  div.innerHTML = '<div style="padding:14px 20px;"><div class="form-grid"><div class="fg"><label class="fl">Brand Name</label><input class="fi" placeholder="Enter brand name"></div><div class="fg"><label class="fl">Type</label><select class="fi"><option>Real</option><option>Virtual</option></select></div><div class="fg"><label class="fl">Ownership</label><select class="fi"><option>Franchisee</option><option>Franchisor</option><option>Fully Owned</option><option>CPA</option></select></div><div class="fg"><label class="fl">Locations</label><div style="font-size:12px;color:var(--text-light);margin-top:4px;">Assign from available pool after saving brand</div></div></div></div>';
+  area.appendChild(div);
+}
+
+// ADD PERSON ROW (FIXED: brand selector instead of static "All")
+function addPersonRow() {
+  const tbody = document.getElementById('people-tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td><input class="fi" placeholder="Name" style="width:130px;"></td><td><input class="fi" placeholder="email@" style="width:170px;"></td><td><select class="fi" style="width:120px;"><option>Owner</option><option>Marketing</option><option>Operations</option><option>Finance</option><option>GM / Manager</option></select></td><td><select class="fi" style="width:140px;"><option selected>All Brands</option><option>Dave\'s Hot Chicken</option><option>Slim Chickens</option></select></td><td><select class="fi" style="width:120px;"><option>Full Access</option><option>Reports Only</option><option>View Only</option></select></td>';
+  tbody.appendChild(tr);
+}
+
+// PERIOD GENERATION
+function generatePeriods() {
+  const type = document.getElementById('period-type').value;
+  const grid = document.getElementById('period-preview');
+  const countInput = document.getElementById('period-count');
+  if (type.includes('4-4-5') || type.includes('4-5-4') || type.includes('5-4-4')) {
+    countInput.value = '13';
+    grid.innerHTML = '';
+    for (let i = 1; i <= 13; i++) {
+      grid.innerHTML += '<div class="period-cell"><div class="pc-num">P' + i + '</div><div class="pc-dates">4 or 5 weeks</div></div>';
+    }
+  } else if (type === 'Custom') {
+    countInput.value = '';
+    countInput.removeAttribute('readonly');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text-light);font-size:13px;">Upload your period calendar or enter the number of periods above</div>';
+  } else {
+    countInput.value = '12';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = [31,28,31,30,31,30,31,31,30,31,30,31];
+    grid.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      grid.innerHTML += '<div class="period-cell"><div class="pc-num">P' + (i+1) + '</div><div class="pc-dates">' + months[i] + ' 1 - ' + months[i] + ' ' + days[i] + '</div></div>';
+    }
+  }
+}
+
+// FILE HANDLERS
+function handlePeriodUpload(input) {
+  if (input.files.length) {
+    const grid = document.getElementById('period-preview');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--green-text);font-size:13px;background:var(--green-soft);border-radius:8px;">Uploaded: ' + input.files[0].name + ' — 13 periods detected</div>';
+  }
+}
+function handleLogoUpload(input) {
+  if (input.files.length) {
+    const preview = document.getElementById('logo-preview');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:72px;height:72px;object-fit:contain;border-radius:12px;border:2px solid var(--border);">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// BRAND PILL TOGGLE
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('brand-pill')) {
+    const parent = e.target.closest('.brand-pills');
+    if (parent) {
+      parent.querySelectorAll('.brand-pill').forEach(p => p.classList.remove('active'));
+      e.target.classList.add('active');
+    }
+  }
+});
+
+// BILLING: Contract Verification
+function verifyContract() {
+  const status = document.getElementById('cv-status');
+  status.textContent = 'Verified';
+  status.className = 'tag tag-green';
+  event.target.textContent = 'Verified ✓';
+  event.target.disabled = true;
+  event.target.style.background = 'var(--green)';
+}
+
+// BILLING: Structure Selection
+function selectBillingStructure(type) {
+  document.querySelectorAll('.bs-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('bs-' + type).classList.add('selected');
+  document.getElementById('be-form-single').style.display = type === 'single' ? 'block' : 'none';
+  document.getElementById('be-form-grouped').style.display = type === 'grouped' ? 'block' : 'none';
+  document.getElementById('be-form-perloc').style.display = type === 'perloc' ? 'block' : 'none';
+}
+
+// BILLING: Add billing group
+function addBillingGroup() {
+  const container = document.getElementById('be-form-grouped');
+  const count = container.querySelectorAll('.be-card').length + 1;
+  const card = document.createElement('div');
+  card.className = 'be-card';
+  card.innerHTML = '<div class="be-header"><h4>Billing Entity ' + count + ': New Group</h4><span class="tag">0 locations</span></div><div class="be-body"><div class="form-grid"><div class="fg"><label class="fl">Group Name *</label><input class="fi" placeholder="e.g. Florida North"></div><div class="fg"><label class="fl">Account Manager Name *</label><input class="fi" placeholder="Full name"></div><div class="fg"><label class="fl">Account Manager Email *</label><input class="fi" placeholder="billing@company.com"></div><div class="fg"><label class="fl">Phone *</label><input class="fi" placeholder="(555) 123-4567"></div><div class="fg"><label class="fl">Payment Method *</label><select class="fi"><option value="">Select...</option><option>Credit Card</option><option>ACH / Bank Transfer</option><option>Wire Transfer</option><option>Check</option></select></div><div class="fg"><label class="fl">Billing Address</label><input class="fi" placeholder="Street, City, State ZIP"></div></div><div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:6px;">ASSIGN LOCATIONS</div><div style="font-size:12px;color:var(--text-light);">Select locations from the remaining unassigned pool</div></div></div>';
+  container.insertBefore(card, container.querySelector('button'));
+}
+
+// BILLING: Generate per-location entities
+function generatePerLocEntities() {
+  const allLocs = [
+    'DHC Tampa Downtown','DHC Tampa Westshore','DHC Orlando I-Drive','DHC Orlando Mills',
+    'DHC Jacksonville Beach','DHC Jacksonville South','DHC Miami Brickell','DHC Miami Doral',
+    'DHC Fort Lauderdale','DHC St. Petersburg','DHC Clearwater','DHC Sarasota',
+    'SC Tampa Carrollwood','SC Orlando Colonial','SC Jacksonville Riverside','SC Tallahassee',
+    'SC Gainesville','SC Pensacola','SC Naples','SC Lakeland'
+  ];
+  const container = document.getElementById('perloc-entities');
+  container.innerHTML = '';
+  allLocs.forEach((loc, i) => {
+    container.innerHTML += '<div class="be-card"><div class="be-header"><h4>' + loc + '</h4><span class="tag">Entity ' + (i+1) + ' of 20</span></div><div class="be-body"><div class="form-grid"><div class="fg"><label class="fl">Acc Manager Name *</label><input class="fi" placeholder="Name"></div><div class="fg"><label class="fl">Acc Manager Email *</label><input class="fi" placeholder="email@"></div><div class="fg"><label class="fl">Phone *</label><input class="fi" placeholder="Phone"></div><div class="fg"><label class="fl">Payment Method *</label><select class="fi"><option value="">Select...</option><option>Credit Card</option><option>ACH</option><option>Wire</option></select></div></div></div></div>';
+  });
+  event.target.style.display = 'none';
+}
+
+// TOGGLE
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('toggle')) {
+    e.target.classList.toggle('on');
+  }
+});
+</script>
+</body>
+</html>
